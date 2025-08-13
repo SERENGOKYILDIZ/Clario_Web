@@ -1,0 +1,24 @@
+// Firebase Configuration
+// ⚠️ GÜVENLİK UYARISI: API anahtarlarını firebase-keys.txt dosyasından alın!
+// Bu dosyayı GitHub'a yüklemeden önce gerçek anahtarları kaldırın!
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY_HERE", // firebase-keys.txt'den alın
+    authDomain: "YOUR_AUTH_DOMAIN_HERE", // firebase-keys.txt'den alın
+    projectId: "YOUR_PROJECT_ID_HERE", // firebase-keys.txt'den alın
+    storageBucket: "YOUR_STORAGE_BUCKET_HERE", // firebase-keys.txt'den alın
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE", // firebase-keys.txt'den alın
+    appId: "YOUR_APP_ID_HERE" // firebase-keys.txt'den alın
+};
+
+// Make config globally accessible
+if (typeof window !== 'undefined') {
+    window.firebaseConfig = firebaseConfig;
+} else if (typeof module !== 'undefined' && module.exports) {
+    module.exports = firebaseConfig;
+}
+
+// GÜVENLİK NOTU:
+// 1. firebase-keys.txt dosyasını .gitignore'a ekleyin
+// 2. Bu dosyayı GitHub'a yüklemeden önce gerçek anahtarları kaldırın
+// 3. Production'da environment variables kullanın
