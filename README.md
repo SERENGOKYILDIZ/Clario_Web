@@ -242,7 +242,3 @@ Before committing to Git:
    - Are all files up to date?
 
 ---
-
-**🎉 Project is ready! You can commit to Git!**
-
-**⚠️ REMEMBER: Keep your API keys secure!**
