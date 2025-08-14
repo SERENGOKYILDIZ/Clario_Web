@@ -1242,7 +1242,36 @@
         </div>
     </div>
 
-    <!-- Add Daily Task Modal -->
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Project</h3>
+                <span class="close" onclick="closeModal('editProjectModal')">&times;</span>
+            </div>
+            <form id="editProjectForm">
+                <input type="hidden" id="editProjectId" name="editProjectId">
+                <div class="form-group">
+                    <label for="editProjectTitle">Project Title</label>
+                    <input type="text" id="editProjectTitle" name="editProjectTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProjectDescription">Description</label>
+                    <textarea id="editProjectDescription" name="editProjectDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editProjectColor">Color</label>
+                    <input type="color" id="editProjectColor" name="editProjectColor" value="#3AA8FF">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editProjectModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <!-- Add Daily Task Modal -->
     <div id="addDailyTaskModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -1268,22 +1297,70 @@
                         <input type="time" id="dailyTaskTime" name="dailyTaskTime" value="08:00">
                     </div>
                                          <div class="form-group">
-                         <label for="dailyTaskDays">Days (Hold Ctrl/Cmd to select multiple)</label>
-                         <select id="dailyTaskDays" name="dailyTaskDays" multiple>
-                             <option value="mon">Monday</option>
-                             <option value="tue">Tuesday</option>
-                             <option value="wed">Wednesday</option>
-                             <option value="thu">Thursday</option>
-                             <option value="fri">Friday</option>
-                             <option value="sat">Saturday</option>
-                             <option value="sun">Sunday</option>
-                         </select>
-                         <small style="color: #b8c5d6; font-size: 12px;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple days</small>
-                     </div>
+                        <label for="dailyTaskTitle">Days (Hold Ctrl/Cmd to select multiple)</label>
+                        <select id="dailyTaskDays" name="dailyTaskDays" multiple>
+                            <option value="mon">Monday</option>
+                            <option value="tue">Tuesday</option>
+                            <option value="wed">Wednesday</option>
+                            <option value="thu">Thursday</option>
+                            <option value="fri">Friday</option>
+                            <option value="sat">Saturday</option>
+                            <option value="sun">Sunday</option>
+                        </select>
+                        <small style="color: #b8c5d6; font-size: 12px;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple days</small>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" onclick="closeModal('addDailyTaskModal')">Cancel</button>
                     <button type="submit" class="btn-primary">Add Daily Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Daily Task Modal -->
+    <div id="editDailyTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Daily Task</h3>
+                <span class="close" onclick="closeModal('editDailyTaskModal')">&times;</span>
+            </div>
+            <form id="editDailyTaskForm">
+                <input type="hidden" id="editDailyTaskId" name="editDailyTaskId">
+                <div class="form-group">
+                    <label for="editDailyTaskTitle">Task Title</label>
+                    <input type="text" id="editDailyTaskTitle" name="editDailyTaskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDailyTaskDescription">Description</label>
+                    <textarea id="editDailyTaskDescription" name="editDailyTaskDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editDailyTaskCategory">Category</label>
+                    <input type="text" id="editDailyTaskCategory" name="editDailyTaskCategory" placeholder="health, work, personal">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editDailyTaskTime">Time</label>
+                        <input type="time" id="editDailyTaskTime" name="editDailyTaskTime" value="08:00">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDailyTaskDays">Days (Hold Ctrl/Cmd to select multiple)</label>
+                        <select id="editDailyTaskDays" name="editDailyTaskDays" multiple>
+                            <option value="mon">Monday</option>
+                            <option value="tue">Tuesday</option>
+                            <option value="wed">Wednesday</option>
+                            <option value="thu">Thursday</option>
+                            <option value="fri">Friday</option>
+                            <option value="sat">Saturday</option>
+                            <option value="sun">Sunday</option>
+                        </select>
+                        <small style="color: #b8c5d6; font-size: 12px;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple days</small>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editDailyTaskModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Daily Task</button>
                 </div>
             </form>
         </div>
@@ -1299,6 +1376,77 @@
             <div id="taskDetailsContent">
                 <!-- Task details will be loaded here -->
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="editTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Task</h3>
+                <span class="close" onclick="closeModal('editTaskModal')">&times;</span>
+            </div>
+            <form id="editTaskForm">
+                <input type="hidden" id="editTaskId" name="editTaskId">
+                <div class="form-group">
+                    <label for="editTaskTitle">Task Title</label>
+                    <input type="text" id="editTaskTitle" name="editTaskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskDescription">Description</label>
+                    <textarea id="editTaskDescription" name="editTaskDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskType">Task Type</label>
+                    <select id="editTaskType" name="editTaskType" onchange="toggleEditTaskDateInputs()">
+                        <option value="single">Single Day Task</option>
+                        <option value="range">Date Range Task</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editTaskProject">Project</label>
+                        <select id="editTaskProject" name="editTaskProject">
+                            <option value="">No Project</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTaskPriority">Priority</label>
+                        <select id="editTaskPriority" name="editTaskPriority" required>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" id="editSingleDateRow">
+                    <div class="form-group">
+                        <label for="editTaskDueDate">Due Date</label>
+                        <input type="date" id="editTaskDueDate" name="editTaskDueDate" placeholder="dd-mm-yyyy" required>
+                        <small class="date-format-hint">Format: dd-mm-yyyy</small>
+                    </div>
+                </div>
+                <div class="form-row" id="editDateRangeRow" style="display: none;">
+                    <div class="form-group">
+                        <label for="editTaskStartDate">Start Date</label>
+                        <input type="date" id="editTaskStartDate" name="editTaskStartDate" placeholder="dd-mm-yyyy">
+                        <small class="date-format-hint">Format: dd-mm-yyyy</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTaskEndDate">End Date</label>
+                        <input type="date" id="editTaskEndDate" name="editTaskEndDate" placeholder="dd-mm-yyyy" required>
+                        <small class="date-format-hint">Format: dd-mm-yyyy</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editTaskLabels">Labels (comma separated)</label>
+                    <input type="text" id="editTaskLabels" name="editTaskLabels" placeholder="design, urgent, frontend">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editTaskModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Task</button>
+                </div>
+            </form>
         </div>
     </div>
 
