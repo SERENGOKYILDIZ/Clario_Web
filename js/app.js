@@ -244,10 +244,19 @@ function createDefaultUserData() {
     return {
         profile: {
             name: currentUser.displayName || currentUser.email.split('@')[0],
+            username: currentUser.email.split('@')[0],
             email: currentUser.email,
-            photoPATH: '',
+            phone: '',
             bio: 'Welcome to Clario!',
-            createdAt: new Date().toISOString()
+            location: '',
+            gender: '',
+            birthDate: '',
+            jobTitle: '',
+            company: '',
+            website: '',
+            photoPATH: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         },
         preferences: {
             theme: 'dark',
@@ -272,6 +281,8 @@ function updateUserInterface() {
     updateUserInfo();
     updateDashboardCounts();
     renderRecentTasks();
+    updateDashboardProfileInfo(); // Update dashboard profile info
+    refreshAllProfilePhotos(); // Refresh all profile photos
 }
 
 // Update user information display
@@ -281,29 +292,43 @@ function updateUserInfo() {
     
     if (userData && userData.profile) {
         const name = userData.profile.name;
-        userAvatar.textContent = name.charAt(0).toUpperCase();
         userName.textContent = name;
+        
+        // Try to load profile photo for header avatar
+        try {
+            const photoData = localStorage.getItem(`profile_photo_${currentUser.uid}`);
+            if (photoData) {
+                const photo = JSON.parse(photoData);
+                
+                // Create image element for header
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.alt = 'Profile Photo';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.borderRadius = '50%';
+                img.style.objectFit = 'cover';
+                
+                // Clear placeholder and add image
+                userAvatar.innerHTML = '';
+                userAvatar.appendChild(img);
+            } else {
+                // Fallback to placeholder
+                userAvatar.textContent = name.charAt(0).toUpperCase();
+            }
+        } catch (error) {
+            // Fallback to placeholder
+            userAvatar.textContent = name.charAt(0).toUpperCase();
+        }
     }
 }
 
-// Update dashboard counts
+// Update dashboard counts (removed dashboard cards)
 function updateDashboardCounts() {
-    if (!userData) return;
-    
-    const activeTasks = userData.tasks.filter(task => task.status === 'active').length;
-    const projects = userData.projects.length;
-    const dailyTasks = userData.dailyTasks.filter(task => task.isActive).length;
-    const completedToday = userData.tasks.filter(task => 
-        task.status === 'completed' && 
-        isToday(new Date(task.completedAt))
-    ).length;
-    
-    document.getElementById('activeTasksCount').textContent = activeTasks;
-    document.getElementById('projectsCount').textContent = projects;
-    document.getElementById('dailyTasksCount').textContent = dailyTasks;
-    document.getElementById('completedTodayCount').textContent = completedToday;
-}
-
+    // Dashboard cards removed, no counts to update
+                return;
+            }
+            
 // Render recent tasks
 function renderRecentTasks() {
     if (!userData || !userData.tasks) return;
@@ -458,9 +483,63 @@ function showSection(sectionName) {
     const clickedNavItem = event.currentTarget;
     clickedNavItem.classList.add('active');
     
+    // Scroll to top of main content and sidebar
+    scrollToTop();
+    
     // Load section data
     loadSectionData(sectionName);
 }
+
+// Scroll to top of main content and sidebar
+function scrollToTop() {
+    // Scroll main content to top
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+    
+    // Scroll sidebar to top
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+    
+    // Scroll body to top (if needed)
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+// Performance optimization: Debounced scroll handler
+let scrollTimeout;
+function debouncedScrollHandler() {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        // Perform scroll-related operations here if needed
+    }, 16); // 60fps = ~16ms
+}
+
+// Performance optimization: Throttled resize handler
+let resizeTimeout;
+function throttledResizeHandler() {
+    if (!resizeTimeout) {
+        resizeTimeout = setTimeout(() => {
+            // Perform resize-related operations here if needed
+            resizeTimeout = null;
+        }, 100); // Throttle to 100ms
+    }
+}
+
+// Add performance event listeners
+document.addEventListener('scroll', debouncedScrollHandler, { passive: true });
+window.addEventListener('resize', throttledResizeHandler, { passive: true });
 
 // Load data for specific section
 async function loadSectionData(sectionName) {
@@ -519,7 +598,7 @@ function renderProjects() {
 // Create project card
 function createProjectCard(project) {
     const projectCard = document.createElement('div');
-    projectCard.className = 'dashboard-card';
+    projectCard.className = 'dashboard-card project-card';
     projectCard.dataset.itemId = project.id;
     projectCard.draggable = true;
     
@@ -531,10 +610,13 @@ function createProjectCard(project) {
     
     projectCard.innerHTML = `
         <div class="card-header">
-            <span class="card-title">${project.title}</span>
+            <div class="card-title-container">
+                ${project.color ? `<div class="project-color-indicator" style="background-color: ${project.color};"></div>` : ''}
+                <span class="card-title">${project.title}</span>
+            </div>
             <span class="card-count">${taskCount}</span>
         </div>
-        <p>${project.description || 'No description'}</p>
+        <p>${project.description || 'No description'}</span>
         <div class="task-actions">
             <button class="action-btn btn-edit" onclick="event.stopPropagation(); editProject('${project.id}')">Edit</button>
             <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProject('${project.id}')">Delete</button>
@@ -579,26 +661,23 @@ function createDailyTaskCard(dailyTask) {
     const nextActiveDay = getNextActiveDay(dailyTask.schedule.recurrence.days);
     
     dailyTaskCard.innerHTML = `
-        <div class="card-header">
-            <span class="card-title">${dailyTask.title}</span>
-            <span class="card-count">${dailyTask.progress.currentStreak}</span>
+        <div class="card-content">
+            <div class="card-title">${dailyTask.title}</div>
+            <div class="card-description">${dailyTask.description || 'No description'}</div>
+            <div class="card-info">
+                <div class="card-category">${dailyTask.category || 'No category'}</div>
+                <div class="card-time">${dailyTask.schedule.recurrence.time}</div>
+                <div class="card-days">${formatDays(dailyTask.schedule.recurrence.days)}</div>
+            </div>
         </div>
-        <p>${dailyTask.description || 'No description'}</p>
-        <div class="task-meta">
-            <span><strong>Category:</strong> ${dailyTask.category || 'No category'}</span>
-            <span><strong>Time:</strong> ${dailyTask.schedule.recurrence.time}</span>
-            <span><strong>Days:</strong> ${formatDays(dailyTask.schedule.recurrence.days)}</span>
-            <span><strong>Status:</strong> ${isCompletedToday ? 'Completed Today' : (isActiveToday ? 'Active Today' : 'Not Active Today')}</span>
-            ${!isActiveToday ? `<span><strong>Next:</strong> ${nextActiveDay}</span>` : ''}
-        </div>
-        <div class="task-actions">
-            <button class="action-btn ${isCompletedToday ? 'btn-complete' : 'btn-edit'}" 
+        <div class="card-actions">
+            <button class="btn ${isCompletedToday ? 'btn-complete' : 'btn-edit'}" 
                     onclick="event.stopPropagation(); ${isCompletedToday ? 'uncompleteDailyTask' : 'completeDailyTask'}('${dailyTask.id}')"
                     ${!isActiveToday ? 'disabled' : ''}>
-                ${isCompletedToday ? 'Completed' : 'Complete'}
+                ${isCompletedToday ? '✓' : 'Complete'}
             </button>
-            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">Edit</button>
-            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">Delete</button>
+            <button class="btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">Edit</button>
+            <button class="btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">Delete</button>
         </div>
     `;
     
@@ -614,10 +693,15 @@ function renderProfileForm() {
                 <div class="profile-avatar">
                     <div class="avatar-placeholder" id="avatarPlaceholder">
                         ${userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                    <div class="avatar-actions">
+                        <button type="button" class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()" title="Upload Photo">
+                            <i>📷</i>
+                        </button>
+                        <button type="button" class="avatar-remove-btn" onclick="removeProfilePhoto()" title="Remove Photo" style="display: none;">
+                            <i>🗑️</i>
+                        </button>
                     </div>
-                    <button type="button" class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()">
-                        <i>📷</i>
-                    </button>
                     <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
                 </div>
                 <div class="profile-info">
@@ -767,8 +851,8 @@ function renderProfileForm() {
                         </div>
 
                         <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="resetProfileForm()">Reset</button>
-                            <button type="button" class="btn-primary" onclick="saveProfileChanges()">Save Changes</button>
+                            <button type="button" class="btn-secondary" id="resetProfileBtn">Reset</button>
+                            <button type="submit" class="btn-primary">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -780,6 +864,24 @@ function renderProfileForm() {
     
     // Add event listeners
     setupProfileTabListeners();
+    
+    // Add form submit event listener
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveProfileChanges();
+        });
+    }
+    
+    // Add reset button event listener
+    const resetBtn = document.getElementById('resetProfileBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetProfileForm);
+    }
+    
+    // Load profile photo if exists
+    refreshAllProfilePhotos();
 }
 
 // Render preferences form
@@ -896,18 +998,27 @@ function renderActivityLog() {
     const activityContent = document.getElementById('activityContent');
     activityContent.innerHTML = '';
     
+    // Create activity list container
+    const activityList = document.createElement('div');
+    activityList.className = 'activity-list';
+    
     userData.activityLog.forEach(activity => {
         const activityItem = document.createElement('div');
-        activityItem.className = 'dashboard-card';
+        activityItem.className = 'activity-row';
         activityItem.innerHTML = `
-            <div class="card-header">
-                <span class="card-title">${activity.action}</span>
-                <span class="card-count">${formatDate(activity.timestamp)}</span>
+            <div class="activity-row-icon">📝</div>
+            <div class="activity-row-content">
+                <span class="activity-row-action">${activity.action}</span>
+                <span class="activity-row-separator">•</span>
+                <span class="activity-row-task-id">Task: ${activity.taskId}</span>
+                <span class="activity-row-separator">•</span>
+                <span class="activity-row-time">${formatDate(activity.timestamp)}</span>
             </div>
-            <p>Task ID: ${activity.taskId}</p>
         `;
-        activityContent.appendChild(activityItem);
+        activityList.appendChild(activityItem);
     });
+    
+    activityContent.appendChild(activityList);
 }
 
 // Filter tasks
@@ -1263,8 +1374,8 @@ function formatDateRange(startDate, endDate) {
     if (!startDate && !endDate) return 'No dates set';
     
     if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
         const diffTime = end - start;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
@@ -1289,19 +1400,20 @@ function formatDateRange(startDate, endDate) {
 
 // Format days array to readable text
 function formatDays(days) {
-    if (!days || days.length === 0) return 'No days selected';
+    if (!days || days.length === 0) return 'No days';
     
     const dayNames = {
-        'mon': 'Mon',
-        'tue': 'Tue', 
-        'wed': 'Wed',
-        'thu': 'Thu',
-        'fri': 'Fri',
-        'sat': 'Sat',
-        'sun': 'Sun'
+        'mon': 'M',
+        'tue': 'T', 
+        'wed': 'W',
+        'thu': 'T',
+        'fri': 'F',
+        'sat': 'S',
+        'sun': 'S'
     };
     
-    return days.map(day => dayNames[day] || day).join(', ');
+    // Return individual day tags with single letter abbreviations
+    return days.map(day => `<span class="day-tag">${dayNames[day] || day}</span>`).join('');
 }
 
 // Get next active day for daily tasks
@@ -1386,11 +1498,11 @@ function calculateCurrentStreak(completedDates) {
             prevDate.setHours(0, 0, 0, 0);
             
             const diffTime = prevDate - completedDate;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 1) {
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
                 streak++;
-            } else {
+    } else {
                 break; // Gap found, streak ends
             }
         }
@@ -1488,9 +1600,10 @@ function toggleTaskDateInputs() {
 }
 
 // Add activity log entry
-async function addActivityLog(action, taskId) {
+async function addActivityLog(action, description, taskId = null) {
     const activityEntry = {
         action: action,
+        description: description,
         taskId: taskId,
         timestamp: new Date().toISOString()
     };
@@ -1530,12 +1643,18 @@ async function completeTask(taskId) {
             });
             
             // Add to activity log
-            addActivityLog('task_completed', taskId);
+            addActivityLog('task_completed', 'Task completed', taskId);
             
             // Update UI
             updateDashboardCounts();
             renderRecentTasks();
             renderAllTasks(); // Task sekmesini de güncelle
+            
+            // If task details modal is open, refresh it with updated data
+            const taskDetailsModal = document.getElementById('taskDetailsModal');
+            if (taskDetailsModal && taskDetailsModal.style.display !== 'none') {
+                showTaskDetails(task);
+            }
             
             showStatus('Task completed!', 'success');
         }
@@ -1560,12 +1679,18 @@ async function uncompleteTask(taskId) {
             });
             
             // Add to activity log
-            addActivityLog('task_uncompleted', taskId);
+            addActivityLog('task_uncompleted', 'Task uncompleted', taskId);
             
             // Update UI
             updateDashboardCounts();
             renderRecentTasks();
             renderAllTasks(); // Task sekmesini de güncelle
+            
+            // If task details modal is open, refresh it with updated data
+            const taskDetailsModal = document.getElementById('taskDetailsModal');
+            if (taskDetailsModal && taskDetailsModal.style.display !== 'none') {
+                showTaskDetails(task);
+            }
             
             showStatus('Task uncompleted!', 'info');
         }
@@ -1597,6 +1722,12 @@ async function deleteTask(taskId) {
             updateDashboardCounts();
             renderRecentTasks();
             renderAllTasks(); // Task sekmesini de güncelle
+            
+            // Close task details modal if it's open
+            const taskDetailsModal = document.getElementById('taskDetailsModal');
+            if (taskDetailsModal && taskDetailsModal.style.display !== 'none') {
+                closeModal('taskDetailsModal');
+            }
             
             showStatus('Task deleted successfully!', 'success');
         } catch (error) {
@@ -1678,7 +1809,7 @@ async function deleteProject(projectId) {
             
             // Unassign tasks from this project
             userData.tasks.forEach(task => {
-                if (task.projectId === projectId) {
+            if (task.projectId === projectId) {
                     task.projectId = null;
                 }
             });
@@ -1970,10 +2101,10 @@ function showTaskDetails(task) {
     const projectColor = getProjectColor(task.projectId);
     
     content.innerHTML = `
-        <div class="dashboard-card">
+        <div class="dashboard-card ${task.status === 'completed' ? 'completed-task' : ''}">
             <div class="task-header">
                 <div>
-                    <div class="task-title">${task.title}</div>
+                    <div class="task-title ${task.status === 'completed' ? 'completed' : ''}">${task.title}</div>
                     <div class="task-priority ${getPriorityClass(task.priority)}">${getPriorityText(task.priority)}</div>
                 </div>
             </div>
@@ -1983,17 +2114,41 @@ function showTaskDetails(task) {
                     <div class="project-color" style="background-color: ${projectColor}"></div>
                     <span>${projectName || 'No Project'}</span>
                 </div>
-                <span>Due: ${formatDate(task.dueDate)}</span>
+                <div class="task-dates">
+                    ${task.taskType === 'range' ? 
+                        `<span>Period: ${formatDate(task.startDate)} - ${formatDate(task.endDate)}</span>` :
+                        `<span>Due: ${formatDate(task.dueDate)}</span>`
+                    }
+                </div>
             </div>
             ${task.labels && task.labels.length > 0 ? `
                 <div class="task-labels">
                     <strong>Labels:</strong> ${task.labels.map(label => `<span class="label">${label}</span>`).join(' ')}
                 </div>
             ` : ''}
+            <div class="task-info">
+                <div class="task-detail-item">
+                    <div class="task-detail-label">Status</div>
+                    <div class="task-detail-value">${task.status === 'completed' ? 'Completed' : 'Active'}</div>
+                </div>
+                <div class="task-detail-item">
+                    <div class="task-detail-label">Created</div>
+                    <div class="task-detail-value">${formatDate(task.createdAt || task.dueDate)}</div>
+                </div>
+                ${task.updatedAt ? `
+                    <div class="task-detail-item">
+                        <div class="task-detail-label">Last Updated</div>
+                        <div class="task-detail-value">${formatDate(task.updatedAt)}</div>
+                    </div>
+                ` : ''}
+            </div>
             <div class="task-actions">
-                <button class="action-btn btn-complete" onclick="completeTask('${task.id}')">Complete</button>
+                ${task.status === 'completed' ? 
+                    `<button class="action-btn btn-uncomplete" onclick="uncompleteTask('${task.id}')">Undo Complete</button>` :
+                    `<button class="action-btn btn-complete" onclick="completeTask('${task.id}')">Complete</button>`
+                }
                 <button class="action-btn btn-edit" onclick="editTask('${task.id}')">Edit</button>
-                <button class="action-btn btn-delete" onclick="deleteTask('${task.id}')">Delete</button>
+                <button class="delete-btn btn-delete" onclick="deleteTask('${task.id}')">Delete</button>
             </div>
         </div>
     `;
@@ -2123,9 +2278,9 @@ async function handleEditDailyTask(event) {
         
         if (!dailyTask) {
             showStatus('Daily task not found', 'error');
-            return;
-        }
-        
+        return;
+    }
+    
         // Update daily task data
         dailyTask.title = document.getElementById('editDailyTaskTitle').value;
         dailyTask.description = document.getElementById('editDailyTaskDescription').value;
@@ -2185,11 +2340,14 @@ async function handleEditTask(event) {
             task.startDate = document.getElementById('editTaskStartDate').value;
             task.endDate = document.getElementById('editTaskEndDate').value;
             task.dueDate = null;
-            } else {
+        } else {
             task.dueDate = document.getElementById('editTaskDueDate').value;
             task.startDate = null;
             task.endDate = null;
         }
+        
+        // Add updated timestamp
+        task.updatedAt = new Date().toISOString();
         
         // Update Firestore
         await db.collection('user_data').doc(currentUser.uid).update({
@@ -2204,8 +2362,14 @@ async function handleEditTask(event) {
         renderRecentTasks();
         renderAllTasks();
         
-        // Close modal
+        // Close edit modal
         closeModal('editTaskModal');
+        
+        // If task details modal is open, refresh it with updated data
+        const taskDetailsModal = document.getElementById('taskDetailsModal');
+        if (taskDetailsModal && taskDetailsModal.style.display !== 'none') {
+            showTaskDetails(task);
+        }
         
         showStatus('Task updated successfully!', 'success');
         
@@ -2434,24 +2598,30 @@ function switchProfileTab(tabName) {
     if (selectedPane) selectedPane.classList.add('active');
 }
 
-async function saveProfileChanges(event) {
-    event.preventDefault();
+async function saveProfileChanges() {
     
     try {
         // Collect form data
         const profileData = {
-            name: document.getElementById('profileName').value,
-            username: document.getElementById('profileUsername').value,
-            email: document.getElementById('profileEmail').value,
-            phone: selectedCountryCode + ' ' + document.getElementById('profilePhone').value,
-            birthDate: document.getElementById('profileBirthDate').value,
+            name: document.getElementById('profileName').value.trim(),
+            username: document.getElementById('profileUsername').value.trim(),
+            email: document.getElementById('profileEmail').value.trim(),
+            phone: selectedCountryCode + document.getElementById('profilePhone').value.trim(),
+            bio: document.getElementById('profileBio').value.trim(),
+            location: document.getElementById('profileLocation').value.trim(),
             gender: document.querySelector('input[name="gender"]:checked')?.value || '',
-            bio: document.getElementById('profileBio').value,
-            location: document.getElementById('profileLocation').value,
-            jobTitle: document.getElementById('profileJobTitle').value,
-            company: document.getElementById('profileCompany').value,
-            website: document.getElementById('profileWebsite').value
+            birthDate: document.getElementById('profileBirthDate').value || '',
+            jobTitle: document.getElementById('profileJobTitle').value.trim() || '',
+            company: document.getElementById('profileCompany').value.trim() || '',
+            website: document.getElementById('profileWebsite').value.trim() || '',
+            updatedAt: new Date().toISOString()
         };
+        
+        // Validate required fields
+        if (!profileData.name || !profileData.username || !profileData.email) {
+            showStatus('Please fill in all required fields', 'error');
+            return;
+        }
         
         // Update local data
         userData.profile = { ...userData.profile, ...profileData };
@@ -2463,8 +2633,12 @@ async function saveProfileChanges(event) {
         
         showStatus('Profile updated successfully!', 'success');
         
-        // Update profile header
+        // Update profile header and user interface
         updateProfileHeader();
+        updateUserInterface();
+        
+        // Add to activity log
+        addActivityLog('profile_updated', 'Profile information updated');
         
     } catch (error) {
         console.error('Failed to update profile:', error);
@@ -2479,8 +2653,47 @@ function updateProfileHeader() {
     
     if (profileInfo) profileInfo.textContent = userData.profile.name || 'User';
     if (userEmail) userEmail.textContent = userData.profile.email || 'No email';
+    
+    // Update avatar with profile photo if exists
     if (avatarPlaceholder) {
-        avatarPlaceholder.textContent = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+        try {
+            const photoData = localStorage.getItem(`profile_photo_${currentUser.uid}`);
+            if (photoData) {
+                const photo = JSON.parse(photoData);
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.alt = 'Profile Photo';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.borderRadius = '50%';
+                img.style.objectFit = 'cover';
+                
+                // Clear placeholder and add image
+                avatarPlaceholder.innerHTML = '';
+                avatarPlaceholder.appendChild(img);
+                
+                // Show remove button
+                const removeBtn = document.querySelector('.avatar-remove-btn');
+                if (removeBtn) {
+                    removeBtn.style.display = 'block';
+                }
+            } else {
+                // Fallback to placeholder
+                avatarPlaceholder.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+                
+                // Hide remove button
+                const removeBtn = document.querySelector('.avatar-remove-btn');
+                if (removeBtn) {
+                    removeBtn.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Failed to update profile header avatar:', error);
+            // Fallback to placeholder
+            avatarPlaceholder.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+        }
     }
 }
 
@@ -2531,6 +2744,7 @@ function resetProfileForm() {
     }
     document.getElementById('profileBio').value = userData.profile.bio || '';
     document.getElementById('profileLocation').value = userData.profile.location || '';
+    document.getElementById('profileBirthDate').value = userData.profile.birthDate || '';
     document.getElementById('profileJobTitle').value = userData.profile.jobTitle || '';
     document.getElementById('profileCompany').value = userData.profile.company || '';
     document.getElementById('profileWebsite').value = userData.profile.website || '';
@@ -2655,14 +2869,353 @@ function showDeleteAccountConfirmation() {
     }
 }
 
-function handleAvatarUpload(event) {
+async function handleAvatarUpload(event) {
     const file = event.target.files[0];
-    if (file) {
-        // For now, just show a message
-        showStatus('Avatar upload feature coming soon!', 'info');
+    if (!file) return;
+    
+    try {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showStatus('Please select a valid image file (JPEG, PNG, GIF)', 'error');
+            return;
+        }
         
-        // In the future, you can implement file upload to Firebase Storage
-        // and update the profile with the image URL
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showStatus('Image size must be less than 5MB', 'error');
+            return;
+        }
+        
+        showStatus('Uploading profile photo...', 'info');
+        
+        // Create canvas to resize image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = async function() {
+            // Set canvas size (profile photos should be square)
+            const size = Math.min(img.width, img.height);
+            canvas.width = 200;
+            canvas.height = 200;
+            
+            // Calculate crop position (center crop)
+            const cropX = (img.width - size) / 2;
+            const cropY = (img.height - size) / 2;
+            
+            // Draw resized and cropped image
+            ctx.drawImage(img, cropX, cropY, size, size, 0, 0, 200, 200);
+            
+            // Convert to blob
+            canvas.toBlob(async (blob) => {
+                try {
+                    // Create file name with user ID
+                    const fileName = `${currentUser.uid}_${Date.now()}.jpg`;
+                    const filePath = `images/profile/${fileName}`;
+                    
+                    // Save to local storage (simulating file system)
+                    await saveProfilePhoto(blob, fileName);
+                    
+                    // Update profile with new photo path
+                    userData.profile.photoPATH = filePath;
+                    userData.profile.updatedAt = new Date().toISOString();
+                    
+                    // Update Firestore
+                    await db.collection('user_data').doc(currentUser.uid).update({
+                        profile: userData.profile
+                    });
+                    
+                    // Update UI
+                    refreshAllProfilePhotos();
+                    
+                    // Add to activity log
+                    addActivityLog('profile_photo_updated', 'Profile photo updated');
+                    
+                    showStatus('Profile photo updated successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Failed to save profile photo:', error);
+                    showStatus('Failed to save profile photo: ' + error.message, 'error');
+                }
+            }, 'image/jpeg', 0.8);
+        };
+        
+        img.src = URL.createObjectURL(file);
+        
+    } catch (error) {
+        console.error('Failed to upload avatar:', error);
+        showStatus('Failed to upload avatar: ' + error.message, 'error');
+    }
+}
+
+// Save profile photo to local storage (simulating file system)
+async function saveProfilePhoto(blob, fileName) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Convert blob to base64 for storage
+            const reader = new FileReader();
+            reader.onload = function() {
+                try {
+                    // Store in localStorage (in a real app, this would be Firebase Storage)
+                    const photoData = {
+                        data: reader.result,
+                        timestamp: Date.now(),
+                        fileName: fileName
+                    };
+                    
+                    localStorage.setItem(`profile_photo_${currentUser.uid}`, JSON.stringify(photoData));
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+// Update profile photo in UI
+function updateProfilePhoto(photoPath) {
+    const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+    const removeBtn = document.querySelector('.avatar-remove-btn');
+    if (!avatarPlaceholder) return;
+    
+    try {
+        // Try to load photo from localStorage
+        const photoData = localStorage.getItem(`profile_photo_${currentUser.uid}`);
+        if (photoData) {
+            const photo = JSON.parse(photoData);
+            
+            // Create image element
+            const img = document.createElement('img');
+            img.src = photo.data;
+            img.alt = 'Profile Photo';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.borderRadius = '50%';
+            img.style.objectFit = 'cover';
+            
+            // Clear placeholder and add image
+            avatarPlaceholder.innerHTML = '';
+            avatarPlaceholder.appendChild(img);
+            
+            // Show remove button
+            if (removeBtn) {
+                removeBtn.style.display = 'block';
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update profile photo:', error);
+        // Fallback to placeholder
+        avatarPlaceholder.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+        
+        // Hide remove button
+        if (removeBtn) {
+            removeBtn.style.display = 'none';
+        }
+    }
+}
+
+// Load profile photo when page loads
+function loadProfilePhoto() {
+    if (!currentUser || !userData) return;
+    
+    try {
+        const photoData = localStorage.getItem(`profile_photo_${currentUser.uid}`);
+        if (photoData) {
+            const photo = JSON.parse(photoData);
+            updateProfilePhoto(photo.data);
+            
+            // Also update profile header if it exists
+            setTimeout(() => {
+                updateProfileHeader();
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Failed to load profile photo:', error);
+    }
+}
+
+// Remove profile photo
+async function removeProfilePhoto() {
+    if (!currentUser) return;
+    
+    try {
+        if (confirm('Are you sure you want to remove your profile photo?')) {
+            // Remove from localStorage
+            localStorage.removeItem(`profile_photo_${currentUser.uid}`);
+            
+            // Update profile
+            userData.profile.photoPATH = '';
+            userData.profile.updatedAt = new Date().toISOString();
+            
+            // Update Firestore
+            await db.collection('user_data').doc(currentUser.uid).update({
+                profile: userData.profile
+            });
+            
+            // Update UI
+            refreshAllProfilePhotos();
+            
+            // Add to activity log
+            addActivityLog('profile_photo_removed', 'Profile photo removed');
+            
+            showStatus('Profile photo removed successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('Failed to remove profile photo:', error);
+        showStatus('Failed to remove profile photo: ' + error.message, 'error');
+    }
+}
+
+// Refresh all profile photos across the application
+function refreshAllProfilePhotos() {
+    if (!currentUser || !userData) return;
+    
+    try {
+        const photoData = localStorage.getItem(`profile_photo_${currentUser.uid}`);
+        
+        // Update profile settings avatar
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        if (avatarPlaceholder) {
+            if (photoData) {
+                const photo = JSON.parse(photoData);
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.alt = 'Profile Photo';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.borderRadius = '50%';
+                img.style.objectFit = 'cover';
+                
+                avatarPlaceholder.innerHTML = '';
+                avatarPlaceholder.appendChild(img);
+                
+                // Show remove button
+                const removeBtn = document.querySelector('.avatar-remove-btn');
+                if (removeBtn) {
+                    removeBtn.style.display = 'block';
+                }
+                
+                console.log('✅ Profile settings avatar updated with photo');
+                } else {
+                avatarPlaceholder.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+                
+                // Hide remove button
+                const removeBtn = document.querySelector('.avatar-remove-btn');
+                if (removeBtn) {
+                    removeBtn.style.display = 'none';
+                }
+                
+                console.log('✅ Profile settings avatar updated with placeholder');
+                }
+            } else {
+            console.log('⚠️ Profile settings avatar placeholder not found');
+        }
+        
+        // Update header avatar
+        const userAvatar = document.getElementById('userAvatar');
+        if (userAvatar) {
+            if (photoData) {
+                const photo = JSON.parse(photoData);
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.alt = 'Profile Photo';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.borderRadius = '50%';
+                img.style.objectFit = 'cover';
+                
+                userAvatar.innerHTML = '';
+                userAvatar.appendChild(img);
+                
+                console.log('✅ Header avatar updated with photo');
+            } else {
+                userAvatar.textContent = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+                
+                console.log('✅ Header avatar updated with placeholder');
+            }
+        } else {
+            console.log('⚠️ Header avatar not found');
+        }
+        
+        // Update dashboard profile info
+        updateDashboardProfileInfo();
+        
+        console.log('🔄 All profile photos refreshed successfully');
+        
+    } catch (error) {
+        console.error('❌ Failed to refresh profile photos:', error);
+    }
+}
+
+// Update dashboard profile information
+function updateDashboardProfileInfo() {
+    if (!userData || !userData.profile) return;
+    
+    try {
+        // Update profile name
+        const profileNameLarge = document.getElementById('profileNameLarge');
+        if (profileNameLarge) {
+            profileNameLarge.textContent = userData.profile.name || 'User Name';
+        }
+        
+        // Update profile email
+        const profileEmailLarge = document.getElementById('profileEmailLarge');
+        if (profileEmailLarge) {
+            profileEmailLarge.textContent = userData.profile.email || 'user@email.com';
+        }
+        
+        // Update profile role (job title or company)
+        const profileRoleLarge = document.getElementById('profileRoleLarge');
+        if (profileRoleLarge) {
+            if (userData.profile.jobTitle && userData.profile.company) {
+                profileRoleLarge.textContent = `${userData.profile.jobTitle} at ${userData.profile.company}`;
+            } else if (userData.profile.jobTitle) {
+                profileRoleLarge.textContent = userData.profile.jobTitle;
+            } else if (userData.profile.company) {
+                profileRoleLarge.textContent = userData.profile.company;
+            } else {
+                profileRoleLarge.textContent = 'User';
+            }
+        }
+        
+        // Update dashboard profile avatar
+        const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+        if (profileAvatarLarge) {
+            try {
+                const photoData = localStorage.getItem(`profile_photo_${currentUser.uid}`);
+                if (photoData) {
+                    const photo = JSON.parse(photoData);
+                    const img = document.createElement('img');
+                    img.src = photo.data;
+                    img.alt = 'Profile Photo';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
+                    
+                    profileAvatarLarge.innerHTML = '';
+                    profileAvatarLarge.appendChild(img);
+                    
+                    console.log('✅ Dashboard profile avatar updated with photo');
+                } else {
+                    profileAvatarLarge.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+                    console.log('✅ Dashboard profile avatar updated with placeholder');
+                }
+            } catch (error) {
+                console.error('Failed to update dashboard profile avatar:', error);
+                profileAvatarLarge.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+            }
+        }
+        
+        console.log('✅ Dashboard profile info updated successfully');
+        
+    } catch (error) {
+        console.error('❌ Failed to update dashboard profile info:', error);
     }
 }
 

@@ -98,6 +98,11 @@ A modern and user-friendly project and task management application. Powered by F
 - ✅ **Simplified Profile & Settings**: Clean, tab-free interface for better user experience
 - ✅ **Enhanced Gender Selection**: Modern radio button design for profile customization
 - ✅ **Location Combobox**: Searchable location selector with popular cities
+- ✅ **Task Details Modal**: Comprehensive task information display with real-time updates
+- ✅ **Smart Modal Refresh**: Automatic modal content updates when data changes
+- ✅ **Enhanced Project Cards**: Color indicators positioned next to project titles
+- ✅ **Improved Task Layouts**: Better visual hierarchy and information organization
+- ✅ **Performance Enhancements**: Hardware acceleration and CSS containment optimizations
 - ✅ **Optimized Task Layouts**: Better spacing and sizing for improved data visibility
 
 ### **Technical Improvements**
@@ -218,8 +223,8 @@ Clario_Web_Test/
 │   └── login.html        # Login page
 ├── images/
 │   └── favicon/          # App icons and favicons
-├── firestore.rules   # Firestore security rules
-├── config.js          # Firebase configuration
+├── firestore.rules       # Firestore security rules
+├── config.js             # Firebase configuration
 ├── main.py               # Flask web server (optimized)
 ├── index.html            # Main landing page (root)
 └── README.md             # This file
@@ -313,7 +318,10 @@ firebase deploy
 ### **Project Management**
 1. Use "✨ New Project" section in left panel
 2. Enter project name and description
-3. Click "🚀 Add Project" button
+3. **Color Selection**: Choose a color for visual identification
+4. Click "🚀 Add Project" button
+5. **Visual Indicators**: Color squares appear next to project titles
+6. **Task Association**: Assign tasks to specific projects for better organization
 
 ### **Daily Tasks**
 1. Use "📅 New Daily Task" section in left panel
@@ -328,6 +336,14 @@ firebase deploy
 3. **Daily Tasks**: Click "Edit" button on daily task cards
 4. Modify details in the modal that appears
 5. Click "Update" button to save changes
+
+### **Task Details & Real-time Updates**
+1. **View Details**: Click on any task card to open detailed view
+2. **Comprehensive Information**: See task status, dates, project, labels, and timestamps
+3. **Real-time Updates**: Modal automatically refreshes when task data changes
+4. **Smart Actions**: Complete, edit, or delete tasks directly from details view
+5. **Status Tracking**: Visual indicators for completed vs. active tasks
+6. **Auto-refresh**: Modal content updates instantly after any CRUD operation
 
 ### **Drag & Drop Tips**
 - **Visual Feedback**: Cards show drag indicators (⋮⋮) on hover
@@ -441,6 +457,16 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 - Open source community
 
 ## 📋 Changelog
+
+### **v2.3.0** - UI/UX & Performance Enhancement
+- ✨ Enhanced Task Details Modal with comprehensive information display
+- 🔄 Smart Modal Refresh: Automatic content updates when data changes
+- 🎨 Improved Project Cards: Color indicators positioned next to project titles
+- 📱 Better Task Layouts: Enhanced visual hierarchy and information organization
+- ⚡ Performance Enhancements: Hardware acceleration and CSS containment
+- 🔧 Panel Navigation: Auto-scroll to top when switching between sections
+- 🎯 Real-time Updates: Modal content reflects all CRUD operations instantly
+- 🚀 Optimized Animations: Faster transitions and smoother interactions
 
 ### **v2.2.0** - Profile & Settings Enhancement
 - ✨ Added international phone support with country flag selectors
