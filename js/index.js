@@ -37,7 +37,7 @@ function showInfo(message) {
 // Load Firebase config
 function loadFirebase() {
     const script = document.createElement('script');
-    script.src = 'config/config.js';
+    script.src = '../config.js';
     script.onload = () => {
         // Listen for config ready event
         window.addEventListener('firebaseConfigReady', () => {
