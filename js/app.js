@@ -609,44 +609,284 @@ function createDailyTaskCard(dailyTask) {
 function renderProfileForm() {
     const profileContent = document.getElementById('profileContent');
     profileContent.innerHTML = `
-        <div class="dashboard-card">
-            <h3>Profile Information</h3>
-            <form id="profileForm">
-                <input type="text" id="profileName" placeholder="Name" value="${userData.profile.name || ''}" required>
-                <input type="email" id="profileEmail" placeholder="Email" value="${userData.profile.email || ''}" required>
-                <textarea id="profileBio" placeholder="Bio" rows="3">${userData.profile.bio || ''}</textarea>
-                <button type="submit" class="add-btn">Update Profile</button>
-            </form>
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <div class="avatar-placeholder" id="avatarPlaceholder">
+                        ${userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <button type="button" class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()">
+                        <i>📷</i>
+                    </button>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                </div>
+                <div class="profile-info">
+                    <h3>${userData.profile.name || 'User'}</h3>
+                    <p class="user-email">${userData.profile.email || 'No email'}</p>
+                    <p class="member-since">Member since ${userData.profile.createdAt ? new Date(userData.profile.createdAt).toLocaleDateString() : 'Unknown'}</p>
+                </div>
+            </div>
+
+
+
+
+                    <form id="profileForm" class="profile-form">
+                        <div class="form-section">
+                            <h4>Basic Information</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profileName">Full Name</label>
+                                    <input type="text" id="profileName" placeholder="Enter your full name" value="${userData.profile.name || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profileUsername">Username</label>
+                                    <input type="text" id="profileUsername" placeholder="Choose a username" value="${userData.profile.username || ''}" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileEmail">Email Address</label>
+                                <input type="email" id="profileEmail" placeholder="Enter your email" value="${userData.profile.email || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilePhone">Phone Number</label>
+                                <div class="phone-input-container">
+                                    <div class="country-flag-selector" onclick="toggleCountrySelector()">
+                                        <span class="flag" id="selectedFlag">🇹🇷</span>
+                                        <span class="country-code" id="selectedCountryCode">+90</span>
+                                        <span class="dropdown-arrow">▼</span>
+                                    </div>
+                                    <input type="tel" id="profilePhone" placeholder="(555) 123-4567" value="${userData.profile.phone || ''}" oninput="formatPhoneNumber(this)">
+                                    <div class="country-selector-dropdown" id="countrySelectorDropdown" style="display: none;">
+                                        <div class="country-option" onclick="selectCountry('🇹🇷', '+90', 'TR')">
+                                            <span class="flag">🇹🇷</span>
+                                            <span class="country-name">Turkey</span>
+                                            <span class="country-code">+90</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇺🇸', '+1', 'US')">
+                                            <span class="flag">🇺🇸</span>
+                                            <span class="country-name">United States</span>
+                                            <span class="country-code">+1</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇬🇧', '+44', 'GB')">
+                                            <span class="flag">🇬🇧</span>
+                                            <span class="country-name">United Kingdom</span>
+                                            <span class="country-code">+44</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇩🇪', '+49', 'DE')">
+                                            <span class="flag">🇩🇪</span>
+                                            <span class="country-name">Germany</span>
+                                            <span class="country-code">+49</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇫🇷', '+33', 'FR')">
+                                            <span class="flag">🇫🇷</span>
+                                            <span class="country-name">France</span>
+                                            <span class="country-code">+33</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇮🇹', '+39', 'IT')">
+                                            <span class="flag">🇮🇹</span>
+                                            <span class="country-name">Italy</span>
+                                            <span class="country-code">+39</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇪🇸', '+34', 'ES')">
+                                            <span class="flag">🇪🇸</span>
+                                            <span class="country-name">Spain</span>
+                                            <span class="country-code">+34</span>
+                                        </div>
+                                        <div class="country-option" onclick="selectCountry('🇯🇵', '+81', 'JP')">
+                                            <span class="flag">🇯🇵</span>
+                                            <span class="country-name">Japan</span>
+                                            <span class="country-code">+81</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="input-hint">Select country and enter phone number</small>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Personal Details</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profileBirthDate">Birth Date</label>
+                                    <input type="date" id="profileBirthDate" value="${userData.profile.birthDate || ''}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="profileGender">Gender</label>
+                                    <div class="gender-toggle">
+                                        <input type="radio" id="genderMale" name="gender" value="male" ${userData.profile.gender === 'male' ? 'checked' : ''}>
+                                        <label for="genderMale" class="gender-option">
+                                            <span class="gender-icon">👨</span>
+                                            <span>Male</span>
+                                        </label>
+                                        <input type="radio" id="genderFemale" name="gender" value="female" ${userData.profile.gender === 'female' ? 'checked' : ''}>
+                                        <label for="genderFemale" class="gender-option">
+                                            <span class="gender-icon">👩</span>
+                                            <span>Female</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileBio">Bio</label>
+                                <textarea id="profileBio" placeholder="Tell us about yourself..." rows="4">${userData.profile.bio || ''}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileLocation">Location</label>
+                                <div class="location-combobox">
+                                    <input type="text" id="profileLocation" placeholder="Type to search or select..." value="${userData.profile.location || ''}" oninput="filterLocations(this)" onfocus="showLocationDropdown()" onblur="hideLocationDropdown()">
+                                    <div class="location-dropdown" id="locationDropdown" style="display: none;">
+                                        <div class="location-option" onclick="selectLocation('Istanbul, Turkey')">Istanbul, Turkey</div>
+                                        <div class="location-option" onclick="selectLocation('Ankara, Turkey')">Ankara, Turkey</div>
+                                        <div class="location-option" onclick="selectLocation('Izmir, Turkey')">Izmir, Turkey</div>
+                                        <div class="location-option" onclick="selectLocation('Bursa, Turkey')">Bursa, Turkey</div>
+                                        <div class="location-option" onclick="selectLocation('Antalya, Turkey')">Antalya, Turkey</div>
+                                        <div class="location-option" onclick="selectLocation('London, UK')">London, UK</div>
+                                        <div class="location-option" onclick="selectLocation('New York, USA')">New York, USA</div>
+                                        <div class="location-option" onclick="selectLocation('Berlin, Germany')">Berlin, Germany</div>
+                                        <div class="location-option" onclick="selectLocation('Paris, France')">Paris, France</div>
+                                        <div class="location-option" onclick="selectLocation('Tokyo, Japan')">Tokyo, Japan</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Professional Information</h4>
+                            <div class="form-group">
+                                <label for="profileJobTitle">Job Title</label>
+                                <input type="text" id="profileJobTitle" placeholder="e.g., Software Developer" value="${userData.profile.jobTitle || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="profileCompany">Company</label>
+                                <input type="text" id="profileCompany" placeholder="Company name" value="${userData.profile.company || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="profileWebsite">Website</label>
+                                <input type="url" id="profileWebsite" placeholder="https://yourwebsite.com" value="${userData.profile.website || ''}">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="resetProfileForm()">Reset</button>
+                            <button type="button" class="btn-primary" onclick="saveProfileChanges()">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+
+
+            </div>
         </div>
     `;
     
-    // Add form event listener
-    document.getElementById('profileForm').addEventListener('submit', updateProfile);
+    // Add event listeners
+    setupProfileTabListeners();
 }
 
 // Render preferences form
 function renderPreferencesForm() {
     const preferencesContent = document.getElementById('preferencesContent');
     preferencesContent.innerHTML = `
-        <div class="dashboard-card">
-            <h3>Preferences</h3>
-            <form id="preferencesForm">
-                <select id="prefTheme">
-                    <option value="dark" ${userData.preferences.theme === 'dark' ? 'selected' : ''}>Dark Theme</option>
-                    <option value="light" ${userData.preferences.theme === 'light' ? 'selected' : ''}>Light Theme</option>
-                </select>
-                <select id="prefLanguage">
-                    <option value="en" ${userData.preferences.language === 'en' ? 'selected' : ''}>English</option>
-                    <option value="tr" ${userData.preferences.language === 'tr' ? 'selected' : ''}>Turkish</option>
-                </select>
-                <input type="time" id="prefReminderTime" value="${userData.preferences.notificationSettings.reminderTime}">
-                <button type="submit" class="add-btn">Update Preferences</button>
-            </form>
+        <div class="settings-container">
+            <div class="settings-section">
+                <h4>Appearance</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Dark Mode</h5>
+                        <p>Use dark theme for the application</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="darkMode" ${userData.preferences?.darkMode ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Language</h5>
+                        <p>Choose your preferred language</p>
+                    </div>
+                    <select id="languageSelect" class="setting-select">
+                        <option value="en" ${userData.preferences?.language === 'en' ? 'selected' : ''}>English</option>
+                        <option value="tr" ${userData.preferences?.language === 'tr' ? 'selected' : ''}>Türkçe</option>
+                        <option value="es" ${userData.preferences?.language === 'es' ? 'selected' : ''}>Español</option>
+                        <option value="fr" ${userData.preferences?.language === 'fr' ? 'selected' : ''}>Français</option>
+                        <option value="de" ${userData.preferences?.language === 'de' ? 'selected' : ''}>Deutsch</option>
+                    </select>
+                </div>
             </div>
+
+            <div class="settings-section">
+                <h4>Notification Preferences</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Email Notifications</h5>
+                        <p>Receive email notifications for important updates</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="emailNotifications" ${userData.preferences?.emailNotifications ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Push Notifications</h5>
+                        <p>Receive push notifications on your device</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="pushNotifications" ${userData.preferences?.pushNotifications ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Security Settings</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Change Password</h5>
+                        <p>Update your account password</p>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="showChangePasswordForm()">Change Password</button>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Two-Factor Authentication</h5>
+                        <p>Add an extra layer of security to your account</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="twoFactorAuth" ${userData.preferences?.twoFactorAuth ? 'checked' : ''}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Login History</h5>
+                        <p>View your recent login activities</p>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="showLoginHistory()">View History</button>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h5>Account Deletion</h5>
+                        <p>Permanently delete your account and all data</p>
+                    </div>
+                    <button type="button" class="btn-danger" onclick="showDeleteAccountConfirmation()">Delete Account</button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="resetAllSettings()">Reset All</button>
+                <button type="button" class="btn-primary" onclick="saveAllSettings()">Save All Settings</button>
+                </div>
+        </div>
     `;
     
-    // Add form event listener
-    document.getElementById('preferencesForm').addEventListener('submit', updatePreferences);
+    // Add event listeners
+    setupSettingsTabListeners();
 }
 
 // Render activity log
@@ -2168,5 +2408,544 @@ window.logout = logout;
 window.initializeDragAndDrop = initializeDragAndDrop;
 window.handleDragStart = handleDragStart;
 window.handleDrop = handleDrop;
+
+// Profile Settings Functions
+function setupProfileTabListeners() {
+    // Add event listeners for profile functionality
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', saveProfileChanges);
+    }
+}
+
+function switchProfileTab(tabName) {
+    // Remove active class from all tabs and panes
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    tabPanes.forEach(pane => pane.classList.remove('active'));
+    
+    // Add active class to selected tab and pane
+    const selectedTab = document.querySelector(`[onclick="switchProfileTab('${tabName}')"]`);
+    const selectedPane = document.getElementById(`${tabName}Tab`);
+    
+    if (selectedTab) selectedTab.classList.add('active');
+    if (selectedPane) selectedPane.classList.add('active');
+}
+
+async function saveProfileChanges(event) {
+    event.preventDefault();
+    
+    try {
+        // Collect form data
+        const profileData = {
+            name: document.getElementById('profileName').value,
+            username: document.getElementById('profileUsername').value,
+            email: document.getElementById('profileEmail').value,
+            phone: selectedCountryCode + ' ' + document.getElementById('profilePhone').value,
+            birthDate: document.getElementById('profileBirthDate').value,
+            gender: document.querySelector('input[name="gender"]:checked')?.value || '',
+            bio: document.getElementById('profileBio').value,
+            location: document.getElementById('profileLocation').value,
+            jobTitle: document.getElementById('profileJobTitle').value,
+            company: document.getElementById('profileCompany').value,
+            website: document.getElementById('profileWebsite').value
+        };
+        
+        // Update local data
+        userData.profile = { ...userData.profile, ...profileData };
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            profile: userData.profile
+        });
+        
+        showStatus('Profile updated successfully!', 'success');
+        
+        // Update profile header
+        updateProfileHeader();
+        
+    } catch (error) {
+        console.error('Failed to update profile:', error);
+        showStatus('Failed to update profile: ' + error.message, 'error');
+    }
+}
+
+function updateProfileHeader() {
+    const profileInfo = document.querySelector('.profile-info h3');
+    const userEmail = document.querySelector('.user-email');
+    const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+    
+    if (profileInfo) profileInfo.textContent = userData.profile.name || 'User';
+    if (userEmail) userEmail.textContent = userData.profile.email || 'No email';
+    if (avatarPlaceholder) {
+        avatarPlaceholder.textContent = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
+    }
+}
+
+function resetProfileForm() {
+    // Reset form to original values
+    document.getElementById('profileName').value = userData.profile.name || '';
+    document.getElementById('profileUsername').value = userData.profile.username || '';
+    document.getElementById('profileEmail').value = userData.profile.email || '';
+    // Reset phone number (remove country code if present)
+    let phoneNumber = userData.profile.phone || '';
+    if (phoneNumber.startsWith('+')) {
+        // Extract country code and set it
+        const countryMatch = phoneNumber.match(/^\+(\d+)\s/);
+        if (countryMatch) {
+            const countryCode = '+' + countryMatch[1];
+            // Find and set the country
+            if (countryCode === '+90') {
+                selectCountry('🇹🇷', '+90', 'TR');
+            } else if (countryCode === '+1') {
+                selectCountry('🇺🇸', '+1', 'US');
+            } else if (countryCode === '+44') {
+                selectCountry('🇬🇧', '+44', 'GB');
+            } else if (countryCode === '+49') {
+                selectCountry('🇩🇪', '+49', 'DE');
+            } else if (countryCode === '+33') {
+                selectCountry('🇫🇷', '+33', 'FR');
+            } else if (countryCode === '+39') {
+                selectCountry('🇮🇹', '+39', 'IT');
+            } else if (countryCode === '+34') {
+                selectCountry('🇪🇸', '+34', 'ES');
+            } else if (countryCode === '+81') {
+                selectCountry('🇯🇵', '+81', 'JP');
+            }
+            // Remove country code from phone number
+            phoneNumber = phoneNumber.replace(/^\+(\d+)\s/, '');
+        }
+    }
+    document.getElementById('profilePhone').value = phoneNumber;
+    document.getElementById('profileBirthDate').value = userData.profile.birthDate || '';
+    // Reset gender radio buttons
+    if (userData.profile.gender === 'male') {
+        document.getElementById('genderMale').checked = true;
+    } else if (userData.profile.gender === 'female') {
+        document.getElementById('genderFemale').checked = true;
+    } else {
+        document.getElementById('genderMale').checked = false;
+        document.getElementById('genderFemale').checked = false;
+    }
+    document.getElementById('profileBio').value = userData.profile.bio || '';
+    document.getElementById('profileLocation').value = userData.profile.location || '';
+    document.getElementById('profileJobTitle').value = userData.profile.jobTitle || '';
+    document.getElementById('profileCompany').value = userData.profile.company || '';
+    document.getElementById('profileWebsite').value = userData.profile.website || '';
+    
+    showStatus('Form reset to original values', 'info');
+}
+
+async function saveAccountSettings() {
+    try {
+        const preferences = {
+            emailNotifications: document.getElementById('emailNotifications').checked,
+            pushNotifications: document.getElementById('pushNotifications').checked,
+            darkMode: document.getElementById('darkMode').checked,
+            language: document.getElementById('languageSelect').value,
+            timezone: document.getElementById('timezoneSelect').value
+        };
+        
+        // Update local data
+        if (!userData.preferences) userData.preferences = {};
+        userData.preferences = { ...userData.preferences, ...preferences };
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            preferences: userData.preferences
+        });
+        
+        showStatus('Account settings saved successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Failed to save account settings:', error);
+        showStatus('Failed to save account settings: ' + error.message, 'error');
+    }
+}
+
+function resetAccountSettings() {
+    // Reset to original values
+    document.getElementById('emailNotifications').checked = userData.preferences?.emailNotifications || false;
+    document.getElementById('pushNotifications').checked = userData.preferences?.pushNotifications || false;
+    document.getElementById('darkMode').checked = userData.preferences?.darkMode || false;
+    document.getElementById('languageSelect').value = userData.preferences?.language || 'en';
+    document.getElementById('timezoneSelect').value = userData.preferences?.timezone || 'UTC';
+    
+    showStatus('Account settings reset to original values', 'info');
+}
+
+function showChangePasswordForm() {
+    // Create a simple password change modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <span class="close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+                    <button type="submit" class="btn-primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add form event listener
+    document.getElementById('changePasswordForm').addEventListener('submit', handlePasswordChange);
+}
+
+async function handlePasswordChange(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showStatus('New passwords do not match', 'error');
+        return;
+    }
+    
+    try {
+        // Re-authenticate user
+        const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, currentPassword);
+        await currentUser.reauthenticateWithCredential(credential);
+        
+        // Change password
+        await currentUser.updatePassword(newPassword);
+        
+        showStatus('Password changed successfully!', 'success');
+        
+        // Close modal
+        document.querySelector('.modal').remove();
+        
+    } catch (error) {
+        console.error('Failed to change password:', error);
+        showStatus('Failed to change password: ' + error.message, 'error');
+    }
+}
+
+function showLoginHistory() {
+    showStatus('Login history feature coming soon!', 'info');
+}
+
+function showDeleteAccountConfirmation() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.')) {
+        showStatus('Account deletion feature coming soon!', 'info');
+    }
+}
+
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // For now, just show a message
+        showStatus('Avatar upload feature coming soon!', 'info');
+        
+        // In the future, you can implement file upload to Firebase Storage
+        // and update the profile with the image URL
+    }
+}
+
+// Settings Functions
+function setupSettingsTabListeners() {
+    // Add event listeners for settings functionality
+}
+
+function switchSettingsTab(tabName) {
+    // Remove active class from all tabs and panes
+    const tabBtns = document.querySelectorAll('.settings-tabs .tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    tabPanes.forEach(pane => pane.classList.remove('active'));
+    
+    // Add active class to selected tab and pane
+    const selectedTab = document.querySelector(`[onclick="switchSettingsTab('${tabName}')"]`);
+    const selectedPane = document.getElementById(`${tabName}Tab`);
+    
+    if (selectedTab) selectedTab.classList.add('active');
+    if (selectedPane) selectedPane.classList.add('active');
+}
+
+async function saveGeneralSettings() {
+    try {
+        const preferences = {
+            darkMode: document.getElementById('darkMode').checked,
+            language: document.getElementById('languageSelect').value,
+            timezone: document.getElementById('timezoneSelect').value
+        };
+        
+        // Update local data
+        if (!userData.preferences) userData.preferences = {};
+        userData.preferences = { ...userData.preferences, ...preferences };
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            preferences: userData.preferences
+        });
+        
+        showStatus('General settings saved successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Failed to save general settings:', error);
+        showStatus('Failed to save general settings: ' + error.message, 'error');
+    }
+}
+
+function resetGeneralSettings() {
+    // Reset to original values
+    document.getElementById('darkMode').checked = userData.preferences?.darkMode || false;
+    document.getElementById('languageSelect').value = userData.preferences?.language || 'en';
+    document.getElementById('timezoneSelect').value = userData.preferences?.timezone || 'UTC';
+    
+    showStatus('General settings reset to original values', 'info');
+}
+
+async function saveNotificationSettings() {
+    try {
+        const preferences = {
+            emailNotifications: document.getElementById('emailNotifications').checked,
+            pushNotifications: document.getElementById('pushNotifications').checked
+        };
+        
+        // Update local data
+        if (!userData.preferences) userData.preferences = {};
+        userData.preferences = { ...userData.preferences, ...preferences };
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            preferences: userData.preferences
+        });
+        
+        showStatus('Notification settings saved successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Failed to save notification settings:', error);
+        showStatus('Failed to save notification settings: ' + error.message, 'error');
+    }
+}
+
+function resetNotificationSettings() {
+    // Reset to original values
+    document.getElementById('emailNotifications').checked = userData.preferences?.emailNotifications || false;
+    document.getElementById('pushNotifications').checked = userData.preferences?.pushNotifications || false;
+    
+    showStatus('Notification settings reset to original values', 'info');
+}
+
+function resetAllSettings() {
+    // Reset all settings to original values
+    document.getElementById('darkMode').checked = userData.preferences?.darkMode || false;
+    document.getElementById('languageSelect').value = userData.preferences?.language || 'en';
+    document.getElementById('emailNotifications').checked = userData.preferences?.emailNotifications || false;
+    document.getElementById('pushNotifications').checked = userData.preferences?.pushNotifications || false;
+    document.getElementById('twoFactorAuth').checked = userData.preferences?.twoFactorAuth || false;
+    
+    showStatus('All settings reset to original values', 'info');
+}
+
+async function saveAllSettings() {
+    try {
+        const preferences = {
+            darkMode: document.getElementById('darkMode').checked,
+            language: document.getElementById('languageSelect').value,
+            emailNotifications: document.getElementById('emailNotifications').checked,
+            pushNotifications: document.getElementById('pushNotifications').checked,
+            twoFactorAuth: document.getElementById('twoFactorAuth').checked
+        };
+        
+        // Update local data
+        if (!userData.preferences) userData.preferences = {};
+        userData.preferences = { ...userData.preferences, ...preferences };
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            preferences: userData.preferences
+        });
+        
+        showStatus('All settings saved successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Failed to save all settings:', error);
+        showStatus('Failed to save all settings: ' + error.message, 'error');
+    }
+}
+
+// Global exports for profile functionality
+window.switchProfileTab = switchProfileTab;
+window.saveProfileChanges = saveProfileChanges;
+window.resetProfileForm = resetProfileForm;
+window.showChangePasswordForm = showChangePasswordForm;
+window.showLoginHistory = showLoginHistory;
+window.showDeleteAccountConfirmation = showDeleteAccountConfirmation;
+window.handleAvatarUpload = handleAvatarUpload;
+
+// Phone and Location Functions
+let selectedCountryCode = '+90';
+let selectedCountry = 'TR';
+
+function formatPhoneNumber(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove non-digits
+    const countryCode = selectedCountryCode;
+    
+    if (value.length > 0) {
+        switch (countryCode) {
+            case '+90': // Turkey
+                if (value.length <= 3) {
+                    value = value;
+                } else if (value.length <= 6) {
+                    value = '(' + value.substring(0, 3) + ') ' + value.substring(3);
+                } else if (value.length <= 9) {
+                    value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6);
+                } else {
+                    value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6, 10);
+                }
+                break;
+            case '+1': // US/Canada
+                if (value.length <= 3) {
+                    value = value;
+                } else if (value.length <= 6) {
+                    value = '(' + value.substring(0, 3) + ') ' + value.substring(3);
+                } else {
+                    value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6, 10);
+                }
+                break;
+            case '+44': // UK
+                if (value.length <= 4) {
+                    value = value;
+                } else if (value.length <= 7) {
+                    value = value.substring(0, 4) + ' ' + value.substring(4);
+                } else {
+                    value = value.substring(0, 4) + ' ' + value.substring(4, 7) + ' ' + value.substring(7, 11);
+                }
+                break;
+            default: // Other countries
+                if (value.length <= 4) {
+                    value = value;
+                } else if (value.length <= 8) {
+                    value = value.substring(0, 4) + ' ' + value.substring(4);
+                } else {
+                    value = value.substring(0, 4) + ' ' + value.substring(4, 8) + ' ' + value.substring(8, 12);
+                }
+        }
+    }
+    
+    input.value = value;
+}
+
+function showLocationDropdown() {
+    const dropdown = document.getElementById('locationDropdown');
+    if (dropdown) {
+        dropdown.style.display = 'block';
+    }
+}
+
+function hideLocationDropdown() {
+    // Delay hiding to allow click on options
+    setTimeout(() => {
+        const dropdown = document.getElementById('locationDropdown');
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+    }, 200);
+}
+
+function filterLocations(input) {
+    const searchTerm = input.value.toLowerCase();
+    const options = document.querySelectorAll('.location-option');
+    
+    options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            option.style.display = 'block';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+    
+    // Show dropdown when typing
+    showLocationDropdown();
+}
+
+function selectLocation(location) {
+    document.getElementById('profileLocation').value = location;
+    hideLocationDropdown();
+}
+
+function toggleCountrySelector() {
+    const dropdown = document.getElementById('countrySelectorDropdown');
+    if (dropdown.style.display === 'none') {
+        dropdown.style.display = 'block';
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+function selectCountry(flag, countryCode, country) {
+    selectedCountryCode = countryCode;
+    selectedCountry = country;
+    
+    document.getElementById('selectedFlag').textContent = flag;
+    document.getElementById('selectedCountryCode').textContent = countryCode;
+    
+    // Update phone input placeholder based on country
+    const phoneInput = document.getElementById('profilePhone');
+    switch (countryCode) {
+        case '+90': // Turkey
+            phoneInput.placeholder = '(555) 123-4567';
+            break;
+        case '+1': // US/Canada
+            phoneInput.placeholder = '(555) 123-4567';
+            break;
+        case '+44': // UK
+            phoneInput.placeholder = '1234 567 8901';
+            break;
+        default:
+            phoneInput.placeholder = '1234 5678 9012';
+    }
+    
+    // Hide dropdown
+    document.getElementById('countrySelectorDropdown').style.display = 'none';
+    
+    // Clear phone input when country changes
+    phoneInput.value = '';
+}
+
+// Global exports for settings functionality
+window.saveGeneralSettings = saveGeneralSettings;
+window.resetGeneralSettings = resetGeneralSettings;
+window.saveNotificationSettings = saveNotificationSettings;
+window.resetNotificationSettings = resetNotificationSettings;
+window.resetAllSettings = resetAllSettings;
+window.saveAllSettings = saveAllSettings;
+
+// Global exports for phone and location functionality
+window.formatPhoneNumber = formatPhoneNumber;
+window.showLocationDropdown = showLocationDropdown;
+window.hideLocationDropdown = hideLocationDropdown;
+window.filterLocations = filterLocations;
+window.selectLocation = selectLocation;
+window.toggleCountrySelector = toggleCountrySelector;
+window.selectCountry = selectCountry;
 
 

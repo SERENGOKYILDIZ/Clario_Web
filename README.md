@@ -15,6 +15,8 @@ A modern and user-friendly project and task management application. Powered by F
 - **Edit functionality**: Modify task details, dates, priorities, and project associations
 - **Real-time updates**: UI automatically reflects changes without page refresh
 - **Drag & Drop**: Reorder tasks by dragging and dropping for better organization
+- **Optimized Layouts**: Better spacing and sizing for improved data visibility
+- **Date Format**: dd-mm-yyyy format with automatic validation
 
 ### 📁 **Project Management**
 - Create and manage projects
@@ -32,6 +34,11 @@ A modern and user-friendly project and task management application. Powered by F
 - Session management
 - User preferences and settings
 - Activity logging and tracking
+- **Profile Management**: Comprehensive user profile with personal information
+- **International Phone Support**: Country-based phone formatting with flag selectors
+- **Location Selection**: Searchable combobox with popular cities worldwide
+- **Gender Selection**: Modern radio button interface for profile customization
+- **Simplified Settings**: Unified interface for all user preferences and security settings
 
 ### 🎨 **Modern UI/UX**
 - Responsive design
@@ -44,6 +51,10 @@ A modern and user-friendly project and task management application. Powered by F
 - **Error Handling**: Comprehensive error messages and user feedback
 - **Drag & Drop Interface**: Intuitive card reordering with visual feedback
 - **Visual Indicators**: Drag handles and drop zone highlighting
+- **Tab-Free Interface**: Simplified navigation without complex tab systems
+- **Country Flag Selectors**: Visual country selection with emoji flags
+- **Modern Form Controls**: Enhanced input fields with better validation
+- **Optimized Grid Layouts**: Improved spacing and sizing for better data display
 
 ## 🛠️ Technologies
 
@@ -55,6 +66,9 @@ A modern and user-friendly project and task management application. Powered by F
 - **Drag & Drop**: HTML5 Drag & Drop API
 - **Responsive Design**: CSS Grid, Flexbox, Media Queries
 - **Performance**: CSS animations, JavaScript optimizations
+- **Form Validation**: HTML5 validation with custom patterns
+- **Internationalization**: Multi-country phone format support
+- **Modern CSS**: Backdrop filters, CSS Grid, advanced animations
 
 ## 📋 Requirements
 
@@ -63,6 +77,10 @@ A modern and user-friendly project and task management application. Powered by F
 - Node.js (optional, for development)
 - JavaScript enabled
 - Touch device support for mobile drag & drop
+- **Form Support**: Modern browser with HTML5 form validation
+- **Emoji Support**: Browser with emoji rendering for country flags
+- **CSS Support**: Modern CSS features (backdrop-filter, CSS Grid)
+- **Responsive Design**: Mobile and desktop compatible browsers
 
 ## 📝 Recent Updates
 
@@ -76,6 +94,11 @@ A modern and user-friendly project and task management application. Powered by F
 - ✅ **Modal-based Editing**: Intuitive edit interfaces for all content types
 - ✅ **Performance Optimizations**: Improved loading times and smooth interactions
 - ✅ **Code Quality Improvements**: Enhanced code structure and formatting
+- ✅ **International Phone Support**: Country-based phone formatting with flag selectors
+- ✅ **Simplified Profile & Settings**: Clean, tab-free interface for better user experience
+- ✅ **Enhanced Gender Selection**: Modern radio button design for profile customization
+- ✅ **Location Combobox**: Searchable location selector with popular cities
+- ✅ **Optimized Task Layouts**: Better spacing and sizing for improved data visibility
 
 ### **Technical Improvements**
 - 🔧 **Code Refactoring**: Cleaner, more maintainable codebase
@@ -83,13 +106,16 @@ A modern and user-friendly project and task management application. Powered by F
 - 🔧 **Firebase Integration**: Optimized Firestore operations and data structure
 - 🔧 **Responsive Design**: Enhanced mobile and desktop experience
 - 🔧 **Code Formatting**: Improved indentation and code structure consistency
+- 🔧 **UI Simplification**: Removed unnecessary tabs and complex navigation
+- 🔧 **Form Enhancements**: Better input handling and user experience
+- 🔧 **Layout Optimization**: Improved grid systems and spacing for better data display
 
 ## 🚀 Installation
 
 ### 1. **Download the Project**
 ```bash
 git clone https://github.com/SERENGOKYILDIZ/Clario_Web.git
-cd Clario_Web_Test
+cd Clario_Web
 ```
 
 ### 2. **Create Firebase Project**
@@ -183,20 +209,19 @@ service cloud.firestore {
 
 ```
 Clario_Web_Test/
-├── config/
-│   └── config.js          # Firebase configuration
-├── docs/
-│   └── PROJECT_SUMMARY.md # Project summary
 ├── js/
 │   ├── app.js            # Main application logic
-│   ├── index.js          # Login page
+│   ├── index.js          # Landing page logic
 │   └── login.js          # Login operations
 ├── pages/
 │   ├── app.html          # Main application page
 │   └── login.html        # Login page
-├── security/
-│   └── firestore.rules   # Firestore security rules
-├── index.html            # Main page
+├── images/
+│   └── favicon/          # App icons and favicons
+├── firestore.rules   # Firestore security rules
+├── config.js          # Firebase configuration
+├── main.py               # Flask web server (optimized)
+├── index.html            # Main landing page (root)
 └── README.md             # This file
 ```
 
@@ -204,14 +229,21 @@ Clario_Web_Test/
 
 ### **Local Development Server**
 ```bash
-# Simple HTTP server with Python
-python -m http.server 8000
+# Recommended: Use the built-in Flask server
+python main.py              # Start on default port 8000
+python main.py 8080         # Start on port 8080
+python main.py --help       # Show help and usage
 
-# With Node.js
-npx http-server
+# Features:
+# - Auto-reload on file changes
+# - Better routing and error handling
+# - Development tools and debugging
+# - Professional web server capabilities
 
-# With PHP
-php -S localhost:8000
+# Alternative methods:
+python -m http.server 8000  # Simple Python server
+npx http-server             # Node.js server
+php -S localhost:8000       # PHP server
 ```
 
 ### **Firebase Emulator (Advanced)**
@@ -255,10 +287,12 @@ firebase deploy
 ## 📱 Usage
 
 ### **First Use**
-1. Open the application
-2. Click "Sign Up" button
-3. Enter email and password
-4. Login
+1. Start the server: `python main.py`
+2. Open your browser and go to: `http://localhost:8000/`
+3. The main landing page will load directly
+4. Click "Sign Up" button
+5. Enter email and password
+6. Login
 
 ### **Adding Tasks**
 1. Click "🎯 New Task" panel
@@ -301,6 +335,24 @@ firebase deploy
 - **Auto-save**: All reordering changes are automatically saved
 - **Cross-grid**: Items can be reordered within their respective grids
 
+### **Profile Management**
+1. **Access Profile**: Click "Profile Settings" in the sidebar
+2. **Personal Information**: Fill in name, username, email, phone, bio, location
+3. **Phone Number**: Select country flag and enter phone number
+   - **Country Selection**: Click flag to choose from 8 countries
+   - **Auto-formatting**: Phone numbers are automatically formatted
+   - **Supported Countries**: Turkey, US, UK, Germany, France, Italy, Spain, Japan
+4. **Gender Selection**: Choose between Male (👨) and Female (👩)
+5. **Location**: Type to search or select from popular cities
+6. **Save Changes**: Click "Save Changes" button
+
+### **Settings Management**
+1. **Access Settings**: Click "Settings" in the sidebar
+2. **Appearance**: Toggle dark mode and select language
+3. **Notifications**: Configure email and push notifications
+4. **Security**: Change password, enable 2FA, view login history
+5. **Unified Actions**: Use "Save All Settings" or "Reset All" buttons
+
 ## 🔒 Security
 
 ### **Important Notes**
@@ -337,6 +389,24 @@ firebase deploy
 - Try refreshing the page
 - Verify you're using a modern browser (Chrome, Firefox, Safari, Edge)
 
+#### **Phone Number Formatting Issues**
+- Ensure you've selected a country flag first
+- Check if the country is supported (8 countries available)
+- Verify browser supports emoji rendering for country flags
+- Try refreshing the page if formatting doesn't work
+
+#### **Profile Settings Not Saving**
+- Check if all required fields are filled
+- Ensure you're logged in with valid credentials
+- Check browser console for error messages
+- Verify Firebase connection is working
+
+#### **Settings Not Loading**
+- Ensure you have proper permissions
+- Check if user data is properly loaded
+- Refresh the page and try again
+- Verify all JavaScript files are loaded correctly
+
 ### **Debug Mode**
 To see debug messages in console:
 ```javascript
@@ -372,12 +442,25 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 
 ## 📋 Changelog
 
+### **v2.2.0** - Profile & Settings Enhancement
+- ✨ Added international phone support with country flag selectors
+- 🎨 Simplified Profile and Settings interfaces (removed tabs)
+- 🔧 Enhanced gender selection with modern radio buttons
+- 📍 Added searchable location combobox with popular cities
+- 📱 Optimized task card layouts for better data visibility
+- 🗑️ Removed unnecessary Time Zone setting
+- 🎯 Unified save/reset functionality for all settings
+- 🚀 Improved user experience with cleaner navigation
+
 ### **v2.1.0** - Drag & Drop Update
 - ✨ Added drag & drop reordering for all card types
 - 🎨 Enhanced visual feedback during drag operations
 - 🔧 Improved code structure and formatting
 - 📱 Better mobile and touch device support
 - 🚀 Performance optimizations for smooth interactions
+- 📁 Reorganized file structure (index.html in root)
+- 🐍 Added Flask web server (main.py)
+- 🔧 Optimized server with auto-reload and better routing
 
 ### **v2.0.0** - Major Update
 - ✨ Complete CRUD operations for all content types
@@ -391,7 +474,3 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 - 🔐 Firebase authentication system
 - 📱 Responsive design implementation
 - 🎨 Modern dark theme UI
-
----
-
-**⭐ Don't forget to star this project if you liked it!**
