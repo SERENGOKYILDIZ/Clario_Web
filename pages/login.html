@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clario</title>
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="../images/favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../images/favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../images/favicon/android-chrome-512x512.png">
+    <link rel="manifest" href="../images/favicon/site.webmanifest">
     <style>
         * {
             margin: 0;
@@ -57,6 +66,14 @@
             background: rgba(45, 45, 70, 0.8);
             position: relative;
             z-index: 1;
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
         }
 
         .logo h1 {
@@ -428,6 +445,7 @@
     <!-- Auth Container -->
     <div id="authContainer" class="container">
         <div class="logo">
+            <img src="../images/favicon/android-chrome-192x192.png" alt="Clario Logo">
             <h1>Clario</h1>
             <p class="tagline">Management and Tracking System</p>
         </div>

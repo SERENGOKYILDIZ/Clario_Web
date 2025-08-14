@@ -49,6 +49,11 @@ async function initializeApp() {
         toggleTaskDateInputs(); // Initialize date input visibility
         loadDashboardData();
         // Debug panel is now initialized from debug.js
+        
+        // Initialize drag and drop functionality after data is loaded
+        setTimeout(() => {
+            initializeDragAndDrop();
+        }, 1000);
     } catch (error) {
         console.error('App initialization failed:', error);
         showStatus('Application initialization failed', 'error');
@@ -86,20 +91,20 @@ async function loadFirebaseConfig() {
             return;
         }
         
-        const script = document.createElement('script');
+    const script = document.createElement('script');
         script.src = '../config.js';
         script.onload = () => {
             // Wait a bit for the script to execute
-            setTimeout(() => {
-                if (window.firebaseConfig) {
+        setTimeout(() => {
+            if (window.firebaseConfig) {
                     resolve();
-                } else {
+            } else {
                     reject(new Error('Firebase configuration not found'));
-                }
+            }
             }, 100);
-        };
+    };
         script.onerror = () => reject(new Error('Failed to load Firebase configuration'));
-        document.head.appendChild(script);
+    document.head.appendChild(script);
     });
 }
 
@@ -119,16 +124,16 @@ function initializeFirebase() {
             }
         }
         
-        auth = firebase.auth(app);
-        db = firebase.firestore(app);
-        
+            auth = firebase.auth(app);
+            db = firebase.firestore(app);
+            
         // Listen for auth state changes
-        auth.onAuthStateChanged(handleAuthStateChanged);
+            auth.onAuthStateChanged(handleAuthStateChanged);
         
         console.log('Firebase initialized successfully');
         return true;
-    } catch (error) {
-        console.error('Firebase initialization error:', error);
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
         showStatus('Firebase initialization failed: ' + error.message, 'error');
         return false;
     }
@@ -186,16 +191,16 @@ async function loadUserData() {
                 await db.collection('users').doc(currentUser.uid).delete();
                 
                 console.log('User data migrated from old structure:', userData);
-        } else {
+                        } else {
                 // Create new user document with default structure
                 userData = createDefaultUserData();
                 await db.collection('user_data').doc(currentUser.uid).set(userData);
                 console.log('New user data created:', userData);
-            }
+                        }
         }
         
         console.log('User data loaded:', userData);
-    } catch (error) {
+                    } catch (error) {
         console.error('Failed to load user data:', error);
         showStatus('Failed to load user data', 'error');
     }
@@ -321,7 +326,13 @@ function renderRecentTasks() {
 function createTaskCard(task) {
     const taskCard = document.createElement('div');
     taskCard.className = `task-card ${task.status === 'completed' ? 'completed' : ''}`;
+    taskCard.dataset.itemId = task.id;
+    taskCard.draggable = true;
     taskCard.onclick = () => showTaskDetails(task);
+    
+    // Add drag and drop event listeners
+    taskCard.addEventListener('dragstart', (e) => handleDragStart(e, taskCard, 'tasks', task.id));
+    taskCard.addEventListener('dragend', () => taskCard.classList.remove('dragging'));
     
     const priorityClass = getPriorityClass(task.priority);
     const projectName = getProjectName(task.projectId);
@@ -414,7 +425,7 @@ function formatDate(dateString) {
         return `${formattedDate} (Due today)`;
     } else if (diffDays === 1) {
         return `${formattedDate} (Due tomorrow)`;
-    } else {
+        } else {
         return `${formattedDate} (Due in ${diffDays} days)`;
     }
 }
@@ -509,8 +520,14 @@ function renderProjects() {
 function createProjectCard(project) {
     const projectCard = document.createElement('div');
     projectCard.className = 'dashboard-card';
+    projectCard.dataset.itemId = project.id;
+    projectCard.draggable = true;
     
     const taskCount = userData.tasks.filter(task => task.projectId === project.id).length;
+    
+    // Add drag and drop event listeners
+    projectCard.addEventListener('dragstart', (e) => handleDragStart(e, projectCard, 'projects', project.id));
+    projectCard.addEventListener('dragend', () => projectCard.classList.remove('dragging'));
     
     projectCard.innerHTML = `
         <div class="card-header">
@@ -544,8 +561,14 @@ function renderDailyTasks() {
 function createDailyTaskCard(dailyTask) {
     const dailyTaskCard = document.createElement('div');
     dailyTaskCard.className = 'dashboard-card';
+    dailyTaskCard.dataset.itemId = dailyTask.id;
+    dailyTaskCard.draggable = true;
     
     const today = window.getTodayDate ? window.getTodayDate() : new Date().toISOString().split('T')[0]; // Use debug time if available
+    
+    // Add drag and drop event listeners
+    dailyTaskCard.addEventListener('dragstart', (e) => handleDragStart(e, dailyTaskCard, 'dailyTasks', dailyTask.id));
+    dailyTaskCard.addEventListener('dragend', () => dailyTaskCard.classList.remove('dragging'));
     const isCompletedToday = dailyTask.progress.completedDates.includes(today);
     
     // Check if task is active for today (based on selected days)
@@ -619,7 +642,7 @@ function renderPreferencesForm() {
                 <input type="time" id="prefReminderTime" value="${userData.preferences.notificationSettings.reminderTime}">
                 <button type="submit" class="add-btn">Update Preferences</button>
             </form>
-        </div>
+            </div>
     `;
     
     // Add form event listener
@@ -764,7 +787,7 @@ function setupFormValidation(formId, submitHandler) {
     const form = document.getElementById(formId);
     if (form) {
         form.onsubmit = (e) => {
-            e.preventDefault();
+    e.preventDefault();
             submitHandler(e);
         };
     }
@@ -777,7 +800,7 @@ async function handleAddTask(event) {
         showStatus('Please login to add tasks', 'error');
         return;
     }
-
+    
     const formData = new FormData(event.target);
     const taskData = {
         id: generateId(),
@@ -1254,7 +1277,7 @@ async function addActivityLog(action, taskId) {
 // Task management functions
 async function completeTask(taskId) {
     event.stopPropagation();
-    
+
     try {
         const task = userData.tasks.find(t => t.id === taskId);
         if (task) {
@@ -1435,7 +1458,7 @@ async function deleteProject(projectId) {
             renderProjects(); // Projects sekmesini de güncelle
             
             showStatus('Project deleted successfully!', 'success');
-        } catch (error) {
+    } catch (error) {
             console.error('Failed to delete project:', error);
             showStatus('Failed to delete project: ' + error.message, 'error');
         }
@@ -1922,7 +1945,7 @@ async function handleEditTask(event) {
             task.startDate = document.getElementById('editTaskStartDate').value;
             task.endDate = document.getElementById('editTaskEndDate').value;
             task.dueDate = null;
-        } else {
+            } else {
             task.dueDate = document.getElementById('editTaskDueDate').value;
             task.startDate = null;
             task.endDate = null;
@@ -1966,6 +1989,168 @@ async function logout() {
     }
 }
 
+// Drag and Drop Functionality
+function initializeDragAndDrop() {
+    // Initialize drag and drop for all grids
+    initializeGridDragAndDrop('recentTasksGrid', 'tasks');
+    initializeGridDragAndDrop('allTasksGrid', 'tasks');
+    initializeGridDragAndDrop('projectsGrid', 'projects');
+    initializeGridDragAndDrop('dailyTasksGrid', 'dailyTasks');
+}
+
+function initializeGridDragAndDrop(gridId, dataType) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+
+    // Add drag and drop event listeners to the grid
+    grid.addEventListener('dragover', handleDragOver);
+    grid.addEventListener('drop', (e) => handleDrop(e, dataType));
+    grid.addEventListener('dragenter', handleDragEnter);
+    grid.addEventListener('dragleave', handleDragLeave);
+}
+
+function handleDragStart(e, element, dataType, itemId) {
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+        type: dataType,
+        id: itemId,
+        sourceGrid: e.target.closest('[id$="Grid"]').id
+    }));
+    
+    element.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    const target = e.target.closest('.task-card, .dashboard-card');
+    const grid = e.target.closest('[id$="Grid"]');
+    
+    if (target) {
+        target.classList.add('drag-over');
+    }
+    
+    if (grid) {
+        grid.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    const target = e.target.closest('.task-card, .dashboard-card');
+    const grid = e.target.closest('[id$="Grid"]');
+    
+    if (target) {
+        target.classList.remove('drag-over');
+    }
+    
+    if (grid) {
+        grid.classList.remove('drag-over');
+    }
+}
+
+async function handleDrop(e, dataType) {
+    e.preventDefault();
+    
+    try {
+        const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
+        const targetGrid = e.target.closest('[id$="Grid"]');
+        
+        if (!targetGrid || !dragData || dragData.type !== dataType) return;
+        
+        // Remove drag-over styling
+        const cards = targetGrid.querySelectorAll('.task-card, .dashboard-card');
+        cards.forEach(card => card.classList.remove('drag-over'));
+        
+        // Get the dragged element
+        const draggedElement = document.querySelector('.dragging');
+        if (!draggedElement) return;
+        
+        // Remove dragging class
+        draggedElement.classList.remove('dragging');
+        
+        // Get drop position
+        const dropTarget = e.target.closest('.task-card, .dashboard-card');
+        if (!dropTarget || dropTarget === draggedElement) return;
+        
+        // Get the target item ID
+        const targetId = dropTarget.dataset.itemId;
+        if (!targetId) return;
+        
+        // Reorder the data array
+        await reorderItems(dragData.type, dragData.id, targetId, targetGrid.id);
+        
+        // Re-render the grid
+        switch (dataType) {
+            case 'tasks':
+                if (targetGrid.id === 'recentTasksGrid') {
+                    renderRecentTasks();
+                } else {
+                    renderAllTasks();
+                }
+                break;
+            case 'projects':
+                renderProjects();
+                break;
+            case 'dailyTasks':
+                renderDailyTasks();
+                break;
+        }
+        
+        showStatus(`${dataType.charAt(0).toUpperCase() + dataType.slice(1)} reordered successfully!`, 'success');
+        
+    } catch (error) {
+        console.error('Drop handling error:', error);
+        showStatus('Failed to reorder items', 'error');
+    }
+}
+
+async function reorderItems(dataType, draggedId, targetId, gridId) {
+    if (!userData || !currentUser) return;
+    
+    try {
+        let dataArray;
+        switch (dataType) {
+            case 'tasks':
+                dataArray = userData.tasks;
+                break;
+            case 'projects':
+                dataArray = userData.projects;
+                break;
+            case 'dailyTasks':
+                dataArray = userData.dailyTasks;
+                break;
+            default:
+                return;
+        }
+        
+        // Find the dragged item and target item
+        const draggedIndex = dataArray.findIndex(item => item.id === draggedId);
+        const targetIndex = dataArray.findIndex(item => item.id === targetId);
+        
+        if (draggedIndex === -1 || targetIndex === -1) return;
+        
+        // Reorder the array
+        const [draggedItem] = dataArray.splice(draggedIndex, 1);
+        dataArray.splice(targetIndex, 0, draggedItem);
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            [dataType]: dataArray
+        });
+        
+        // Update local data
+        userData[dataType] = dataArray;
+        
+    } catch (error) {
+        console.error('Failed to reorder items:', error);
+        throw error;
+    }
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initializeApp);
 
@@ -1978,5 +2163,10 @@ window.editDailyTask = editDailyTask;
 window.handleEditDailyTask = handleEditDailyTask;
 window.toggleEditTaskDateInputs = toggleEditTaskDateInputs;
 window.logout = logout;
+
+// Global exports for drag and drop functionality
+window.initializeDragAndDrop = initializeDragAndDrop;
+window.handleDragStart = handleDragStart;
+window.handleDrop = handleDrop;
 
 

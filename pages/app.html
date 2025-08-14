@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clario</title>
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="../images/favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../images/favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../images/favicon/android-chrome-512x512.png">
+    <link rel="manifest" href="../images/favicon/site.webmanifest">
     <style>
         * {
             margin: 0;
@@ -54,6 +63,15 @@
             font-size: 24px;
             font-weight: 700;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-header .logo-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
         }
 
         .user-info {
@@ -202,6 +220,25 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             transition: all 0.2s ease;
+            cursor: grab;
+            user-select: none;
+            position: relative;
+        }
+
+        .dashboard-card:active {
+            cursor: grabbing;
+        }
+
+        .dashboard-card.dragging {
+            opacity: 0.7;
+            transform: rotate(3deg) scale(1.05);
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .dashboard-card.drag-over {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
         }
 
         .dashboard-card:hover {
@@ -281,7 +318,25 @@
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s ease;
-            cursor: pointer;
+            cursor: grab;
+            user-select: none;
+            position: relative;
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .task-card.dragging {
+            opacity: 0.7;
+            transform: rotate(3deg) scale(1.05);
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .task-card.drag-over {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
         }
 
         .task-card:hover {
@@ -572,7 +627,7 @@
          .modal .form-group select[name="taskType"] {
              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
              color: white;
-             font-weight: 600;
+            font-weight: 600;
              border-color: #667eea;
          }
          
@@ -629,7 +684,7 @@
          
          .modal .form-group input[type="date"]:focus::before,
          .modal .form-group input[type="date"]:valid::before {
-             display: none;
+            display: none;
          }
          
          /* Date format hint styling */
@@ -828,6 +883,43 @@
                  ::-webkit-scrollbar-thumb:hover {
              background: rgba(102, 126, 234, 0.7);
          }
+
+        /* Drag and Drop Visual Feedback */
+        .task-grid.drag-over,
+        #projectsGrid.drag-over,
+        #dailyTasksGrid.drag-over {
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+        }
+
+        .drag-placeholder {
+            height: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            margin: 10px 0;
+            opacity: 0.7;
+        }
+
+        /* Drag handle indicator */
+        .task-card::before,
+        .dashboard-card::before {
+            content: '⋮⋮';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .task-card:hover::before,
+        .dashboard-card:hover::before {
+            opacity: 1;
+        }
          
          /* Debug Panel Styles */
          .debug-panel {
@@ -838,7 +930,7 @@
              background: rgba(0, 0, 0, 0.9);
              border: 2px solid #ff6b6b;
              border-radius: 12px;
-             z-index: 9999;
+            z-index: 9999;
              font-family: 'Courier New', monospace;
              font-size: 12px;
              color: #ffffff;
@@ -861,7 +953,7 @@
              color: white;
              width: 24px;
              height: 24px;
-             border-radius: 50%;
+            border-radius: 50%;
              cursor: pointer;
              font-weight: bold;
              font-size: 16px;
@@ -881,7 +973,7 @@
          }
          
          .debug-section {
-             margin-bottom: 20px;
+            margin-bottom: 20px;
              padding-bottom: 15px;
              border-bottom: 1px solid rgba(255, 255, 255, 0.1);
          }
@@ -959,20 +1051,23 @@
          
          .debug-panel.collapsed .debug-toggle {
              transform: rotate(180deg);
-         }
-     </style>
+        }
+    </style>
 </head>
 <body>
     <div id="appContainer" class="app-container">
         <!-- Header -->
         <div class="app-header">
-            <h1>Clario</h1>
+            <h1>
+                <img src="../images/favicon/android-chrome-192x192.png" alt="Clario Logo" class="logo-img">
+                Clario
+            </h1>
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">U</div>
                 <span id="userName">User</span>
                 <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
-        </div>
+                    </div>
+                </div>
 
         <!-- Main Content -->
         <div class="app-content">
@@ -995,8 +1090,8 @@
                     <div class="nav-item" onclick="showSection('daily')">
                         <i>📅</i>
                         <span>Daily Tasks</span>
-                    </div>
-                </div>
+            </div>
+    </div>
 
                 <div class="sidebar-section">
                     <h3>Management</h3>
@@ -1012,8 +1107,8 @@
                         <i>📈</i>
                         <span>Activity Log</span>
                     </div>
-                </div>
             </div>
+        </div>
 
             <!-- Main Content Area -->
             <div class="main-content">
@@ -1165,7 +1260,7 @@
                      <select id="taskType" name="taskType" onchange="toggleTaskDateInputs()">
                          <option value="single">Single Day Task</option>
                          <option value="range">Date Range Task</option>
-                     </select>
+                        </select>
                  </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -1240,8 +1335,8 @@
                 </div>
             </form>
         </div>
-    </div>
-
+                        </div>
+                        
     <!-- Edit Project Modal -->
     <div id="editProjectModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1269,8 +1364,8 @@
                 </div>
             </form>
         </div>
-    </div>
-
+                        </div>
+                        
         <!-- Add Daily Task Modal -->
     <div id="addDailyTaskModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1316,8 +1411,8 @@
                 </div>
             </form>
         </div>
-    </div>
-
+                        </div>
+                        
     <!-- Edit Daily Task Modal -->
     <div id="editDailyTaskModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1362,7 +1457,7 @@
                     <button type="button" class="btn-secondary" onclick="closeModal('editDailyTaskModal')">Cancel</button>
                     <button type="submit" class="btn-primary">Update Daily Task</button>
                 </div>
-            </form>
+                    </form>
         </div>
     </div>
 
