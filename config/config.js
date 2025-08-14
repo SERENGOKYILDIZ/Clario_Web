@@ -1,103 +1,29 @@
 // Firebase Configuration
-// ⚠️ GÜVENLİK UYARISI: API anahtarlarını firebase-keys.txt dosyasından otomatik olarak alır!
+// ⚠️ SECURITY WARNING: Enter your own Firebase information in this file!
 
-// Anahtarları otomatik olarak yükle
-async function loadFirebaseKeys() {
-    try {
-        // Fetch API ile firebase-keys.txt dosyasını oku
-        const response = await fetch('../security/firebase-keys.txt');
-        
-        if (response.ok) {
-            const content = await response.text();
-            const keys = {};
-            
-            // Her satırı parse et
-            const lines = content.split('\n');
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                
-                // Yorum satırlarını ve boş satırları atla
-                if (trimmedLine.startsWith('#') || trimmedLine === '') {
-                    continue;
-                }
-                
-                // key: value formatını parse et
-                const colonIndex = trimmedLine.indexOf(':');
-                if (colonIndex > 0) {
-                    const key = trimmedLine.substring(0, colonIndex).trim();
-                    const value = trimmedLine.substring(colonIndex + 1).trim();
-                    
-                    // Tırnak işaretlerini kaldır (eğer varsa)
-                    const cleanValue = value.replace(/^["']|["']$/g, '');
-                    keys[key] = cleanValue;
-                }
-            }
-            
-            console.log('✅ Firebase anahtarları otomatik olarak yüklendi');
-            return keys;
-        } else {
-            throw new Error('firebase-keys.txt dosyası okunamadı');
-        }
-    } catch (error) {
-        console.error('❌ Firebase anahtarları yüklenemedi:', error.message);
-        console.log('⚠️  Placeholder değerler kullanılıyor...');
-        
-        // Hata durumunda placeholder değerler döndür
-        return {
-            apiKey: "YOUR_API_KEY_HERE",
-            authDomain: "YOUR_AUTH_DOMAIN_HERE",
-            projectId: "YOUR_PROJECT_ID_HERE",
-            storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-            appId: "YOUR_APP_ID_HERE"
-        };
-    }
+// Firebase config object - enter your own information here
+const firebaseConfig = {
+    apiKey: "AIzaSyDj6QFgAXH182QLGU8BD1Br7ewll3Xnh2A",
+    authDomain: "platform-uygulamasi.firebaseapp.com",
+    projectId: "platform-uygulamasi",
+    storageBucket: "platform-uygulamasi.firebasestorage.app",
+    messagingSenderId: "776626966883",
+    appId: "1:776626966883:web:57a4e00696d77baf91c356"
+  };
+
+// Make globally accessible
+if (typeof window !== 'undefined') {
+    window.firebaseConfig = firebaseConfig;
 }
 
-// Anahtarları yükle ve config'i oluştur
-let firebaseConfig = null;
+console.log('✅ Firebase config ready');
 
-// Async olarak anahtarları yükle
-loadFirebaseKeys().then(keys => {
-    firebaseConfig = {
-        apiKey: keys.apiKey,
-        authDomain: keys.authDomain,
-        projectId: keys.projectId,
-        storageBucket: keys.storageBucket,
-        messagingSenderId: keys.messagingSenderId,
-        appId: keys.appId
-    };
-    
-    // Global olarak erişilebilir yap
-    if (typeof window !== 'undefined') {
-        window.firebaseConfig = firebaseConfig;
-    }
-    
-    console.log('✅ Firebase config hazır:', firebaseConfig);
-}).catch(error => {
-    console.error('❌ Firebase config yüklenemedi:', error);
-    
-    // Hata durumunda placeholder config oluştur
-    firebaseConfig = {
-        apiKey: "YOUR_API_KEY_HERE",
-        authDomain: "YOUR_AUTH_DOMAIN_HERE",
-        projectId: "YOUR_PROJECT_ID_HERE",
-        storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-        appId: "YOUR_APP_ID_HERE"
-    };
-    
-    if (typeof window !== 'undefined') {
-        window.firebaseConfig = firebaseConfig;
-    }
-});
-
-// Module export için (Node.js ortamında)
+// Module export for Node.js environment
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { firebaseConfig, loadFirebaseKeys };
+    module.exports = { firebaseConfig };
 }
 
-// GÜVENLİK NOTU:
-// 1. firebase-keys.txt dosyası .gitignore'da olmalı
-// 2. Bu dosyayı GitHub'a yüklemeden önce gerçek anahtarları kaldırın
-// 3. Production'da environment variables kullanın
+// SECURITY NOTE:
+// 1. Add this file to .gitignore
+// 2. Remove real keys before uploading to GitHub
+// 3. Use environment variables in production
