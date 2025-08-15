@@ -346,34 +346,41 @@
             opacity: 0.8;
         }
 
-        .task-card {
+        .task-card,
+        .dashboard-card {
             background: rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             padding: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.15s ease;
+            transition: all 0.3s ease;
             cursor: grab;
             user-select: none;
             position: relative;
         }
 
-        .task-card:active {
+        .task-card:active,
+        .dashboard-card:active {
             cursor: grabbing;
         }
 
-        .task-card.dragging {
+        .task-card.dragging,
+        .dashboard-card.dragging {
             opacity: 0.7;
             transform: rotate(3deg) scale(1.05);
             z-index: 1000;
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
         }
 
-        .task-card.drag-over {
+        .task-card.drag-over,
+        .dashboard-card.drag-over {
             border-color: #667eea;
             background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
         }
 
-        .task-card:hover {
+        .task-card:hover,
+        .dashboard-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             border-color: rgba(102, 126, 234, 0.3);
@@ -815,14 +822,15 @@
         .status-message {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             padding: 15px 20px;
             border-radius: 8px;
             color: white;
             font-weight: 600;
             z-index: 2000;
             max-width: 300px;
-            animation: slideInRight 0.3s ease;
+            animation: slideInTop 0.3s ease;
             backdrop-filter: blur(10px);
         }
 
@@ -841,13 +849,13 @@
             border: 1px solid rgba(102, 126, 234, 0.3);
         }
 
-        @keyframes slideInRight {
+        @keyframes slideInTop {
             from {
-                transform: translateX(100%);
+                transform: translateX(-50%) translateY(-100%);
                 opacity: 0;
             }
             to {
-                transform: translateX(0);
+                transform: translateX(-50%) translateY(0);
                 opacity: 1;
             }
         }
@@ -965,10 +973,12 @@
         /* Drag and Drop Visual Feedback */
         .task-grid.drag-over,
         #projectsGrid.drag-over,
-        #dailyTasksGrid.drag-over {
+        #dailyTasksGrid.drag-over,
+        #recentTasksGrid.drag-over {
             background: rgba(102, 126, 234, 0.05);
             border: 2px dashed rgba(102, 126, 234, 0.3);
             border-radius: 12px;
+            transition: all 0.3s ease;
         }
 
         .drag-placeholder {
@@ -2375,9 +2385,386 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Notes Section Styles */
+        .notes-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: #2a2a2a;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .note-card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #667eea;
+        }
+
+        .note-card.dragging {
+            opacity: 0.7;
+            transform: rotate(3deg) scale(1.05);
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .note-card.drag-over {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .note-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+
+        .note-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .note-type.quick {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .note-type.shopping {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .note-type.general {
+            background: #51cf66;
+            color: #fff;
+        }
+
+        .note-content {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .btn-edit:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-delete:hover {
+            background: #e55a5a;
+        }
+
+        /* Shopping List Specific Styles */
+        .shopping-item-row {
+            display: grid;
+            grid-template-columns: auto 2fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .item-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .item-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .item-checkbox input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .shopping-item {
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .shopping-quantity {
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #fff;
+            text-align: center;
+        }
+
+
+
+        .btn-remove {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            background: #ff6b6b;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-remove:hover {
+            background: #e55a5a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .add-btn.secondary {
+            background: #51cf66;
+        }
+
+        .add-btn.secondary:hover {
+            background: #40c057;
+        }
+
+        /* Shopping Progress Styles */
+        .shopping-progress {
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #444;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #51cf66, #40c057);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            display: block;
+        }
+
+        /* Shopping Items Preview */
+        .shopping-items-preview {
+            margin: 15px 0;
+        }
+
+        .shopping-item-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .shopping-item-preview.completed {
+            background: rgba(81, 207, 102, 0.1);
+            opacity: 0.7;
+        }
+
+        .shopping-item-preview.completed .item-text {
+            text-decoration: line-through;
+            color: #51cf66;
+        }
+
+        .item-checkbox-small {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .item-text {
+            flex: 1;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+
+
+        .no-items {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            display: block;
+            padding: 20px;
+        }
+
+        .more-items {
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+            display: block;
+            padding: 10px;
+        }
+
+        /* Loading Screen Styles */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: #b8c5d6;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text" data-i18n="common.loading">Loading...</p>
+        </div>
+    </div>
+    
     <div id="appContainer" class="app-container">
         <!-- Header -->
         <div class="app-header">
@@ -2413,6 +2800,10 @@
                     <div class="nav-item" onclick="showSection('daily')">
                         <i>📅</i>
                         <span data-i18n="navigation.dailyTasks">Daily Tasks</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('notes')">
+                        <i>📝</i>
+                        <span data-i18n="settings.notes">Notes</span>
                     </div>
                 </div>
                 
@@ -2523,6 +2914,42 @@
                     </div>
                     <div id="dailyTasksGrid">
                         <!-- Daily tasks will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div id="notesSection" class="content-section" style="display: none;">
+                    <div class="content-header">
+                        <h2 class="content-title" data-i18n="settings.notes">Notes</h2>
+                        <div class="header-actions">
+                            <button class="add-btn" onclick="showAddNoteModal()">
+                                <span>+</span>
+                                <span data-i18n="settings.addNote">Add Note</span>
+                            </button>
+                            <button class="add-btn secondary" onclick="showAddShoppingListModal()">
+                                <span>🛒</span>
+                                <span data-i18n="settings.addShoppingList">Add Shopping List</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes Filters -->
+                    <div class="notes-filters">
+                        <div class="search-box">
+                            <input type="text" id="notesSearch" placeholder="Search notes..." data-i18n-placeholder="settings.searchNotes">
+                            <i>🔍</i>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" onclick="filterNotes('all')" data-i18n="settings.allNotes">All Notes</button>
+                            <button class="filter-btn" onclick="filterNotes('quick')" data-i18n="settings.quickNotes">Quick Notes</button>
+                            <button class="filter-btn" onclick="filterNotes('shopping')" data-i18n="settings.shoppingLists">Shopping Lists</button>
+                            <button class="filter-btn" onclick="filterNotes('general')" data-i18n="settings.generalNotes">General Notes</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes Grid -->
+                    <div id="notesGrid" class="notes-grid">
+                        <!-- Notes will be loaded here -->
                     </div>
                 </div>
 
@@ -2742,6 +3169,140 @@
         </div>
                         </div>
                         
+        <!-- Add Note Modal -->
+        <div id="addNoteModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 data-i18n="settings.addNote">Add Note</h3>
+                    <span class="close" onclick="closeModal('addNoteModal')">&times;</span>
+                </div>
+                <form id="addNoteForm">
+                    <div class="form-group">
+                        <label for="noteTitle" data-i18n="settings.noteTitle">Note Title</label>
+                        <input type="text" id="noteTitle" name="noteTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="noteContent" data-i18n="settings.noteContent">Note Content</label>
+                        <textarea id="noteContent" name="noteContent" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="noteType" data-i18n="settings.noteType">Note Type</label>
+                        <select id="noteType" name="noteType" required>
+                            <option value="quick" data-i18n="settings.noteTypeQuick">Quick Note</option>
+                            <option value="general" data-i18n="settings.noteTypeGeneral">General Note</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('addNoteModal')" data-i18n="common.cancel">Cancel</button>
+                        <button type="submit" class="btn-primary" data-i18n="settings.addNote">Add Note</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Note Modal -->
+        <div id="editNoteModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 data-i18n="settings.editNote">Edit Note</h3>
+                    <span class="close" onclick="closeModal('editNoteModal')">&times;</span>
+                </div>
+                <form id="editNoteForm">
+                    <input type="hidden" id="editNoteId" name="editNoteId">
+                    <div class="form-group">
+                        <label for="editNoteTitle" data-i18n="settings.noteTitle">Note Title</label>
+                        <input type="text" id="editNoteTitle" name="editNoteTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNoteContent" data-i18n="settings.noteContent">Note Content</label>
+                        <textarea id="editNoteContent" name="editNoteContent" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNoteType" data-i18n="settings.noteType">Note Type</label>
+                        <select id="editNoteType" name="editNoteType" required>
+                            <option value="quick" data-i18n="settings.noteTypeQuick">Quick Note</option>
+                            <option value="general" data-i18n="settings.noteTypeGeneral">General Note</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('editNoteModal')" data-i18n="common.cancel">Cancel</button>
+                        <button type="submit" class="btn-primary" data-i18n="common.update">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Shopping List Modal -->
+        <div id="editShoppingListModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 data-i18n="settings.editNote">Edit Shopping List</h3>
+                    <span class="close" onclick="closeModal('editShoppingListModal')">&times;</span>
+                </div>
+                <form id="editShoppingListForm">
+                    <input type="hidden" id="editShoppingListId" name="editShoppingListId">
+                    <div class="form-group">
+                        <label for="editShoppingListTitle" data-i18n="settings.noteTitle">Note Title</label>
+                        <input type="text" id="editShoppingListTitle" name="editShoppingListTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editShoppingListDescription" data-i18n="settings.noteContent">Description</label>
+                        <textarea id="editShoppingListDescription" name="editShoppingListDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="settings.shoppingItems">Shopping Items</label>
+                        <div id="editShoppingItemsContainer">
+                            <!-- Shopping items will be loaded here -->
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="addEditShoppingItem()" data-i18n="settings.addItem">Add Item</button>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('editShoppingListModal')" data-i18n="common.cancel">Cancel</button>
+                        <button type="submit" class="btn-primary" data-i18n="common.update">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Shopping List Modal -->
+        <div id="addShoppingListModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 data-i18n="settings.addShoppingList">Add Shopping List</h3>
+                    <span class="close" onclick="closeModal('addShoppingListModal')">&times;</span>
+                </div>
+                <form id="addShoppingListForm">
+                    <div class="form-group">
+                        <label for="shoppingListTitle" data-i18n="settings.noteTitle">Note Title</label>
+                        <input type="text" id="shoppingListTitle" name="shoppingListTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shoppingListDescription" data-i18n="settings.noteContent">Description</label>
+                        <textarea id="shoppingListDescription" name="shoppingListDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="settings.shoppingItems">Shopping Items</label>
+                        <div id="shoppingItemsContainer">
+                            <div class="shopping-item-row">
+                                <div class="item-checkbox">
+                                    <input type="checkbox" class="item-completed" disabled>
+                                </div>
+                                <input type="text" class="shopping-item" placeholder="Item name" data-i18n-placeholder="settings.shoppingItem">
+                                <input type="number" class="shopping-quantity" placeholder="Qty" min="1" value="1" data-i18n-placeholder="settings.shoppingQuantityShort">
+
+                                <button type="button" class="btn-remove" onclick="removeShoppingItem(this)" data-i18n="settings.removeItem">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="addShoppingItem()" data-i18n="settings.addItem">Add Item</button>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('addShoppingListModal')" data-i18n="common.cancel">Cancel</button>
+                        <button type="submit" class="btn-primary" data-i18n="settings.addShoppingList">Add Shopping List</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Add Daily Task Modal -->
     <div id="addDailyTaskModal" class="modal" style="display: none;">
         <div class="modal-content">

@@ -58,9 +58,14 @@ async function initializeApp() {
         setTimeout(() => {
             initializeDragAndDrop();
         }, 1000);
+        
+        // Hide loading screen after app is fully initialized
+        hideLoadingScreen();
     } catch (error) {
         console.error('App initialization failed:', error);
         showStatus('Application initialization failed', 'error');
+        // Hide loading screen even if there's an error
+        hideLoadingScreen();
     }
 }
 
@@ -386,6 +391,14 @@ function forceUpdateAllTranslations() {
     
     // Force update all text content that might contain hardcoded English text
     forceUpdateAllTextContent();
+    
+    // Update dashboard labels
+    updateDashboardLabels();
+    
+    // Update all card translations
+    updateTaskCardTranslations();
+    updateProjectCardTranslations();
+    updateDailyTaskCardTranslations();
 }
 
 /**
@@ -481,6 +494,14 @@ function updateAppLanguageUI() {
             option.classList.add('active');
         }
     });
+    
+    // Update dashboard labels
+    updateDashboardLabels();
+    
+    // Update all card translations
+    updateTaskCardTranslations();
+    updateProjectCardTranslations();
+    updateDailyTaskCardTranslations();
 }
 
 async function loadFirebase() {
@@ -702,9 +723,19 @@ function createDefaultUserData() {
 function updateUserInterface() {
     updateUserInfo();
     updateDashboardCounts();
+    updateDashboardLabels();
     renderRecentTasks();
     updateDashboardProfileInfo(); // Update dashboard profile info
     refreshAllProfilePhotos(); // Refresh all profile photos
+    
+    // Update all card translations after rendering
+    setTimeout(() => {
+        if (typeof i18n !== 'undefined' && i18n.t) {
+            updateTaskCardTranslations();
+            updateProjectCardTranslations();
+            updateDailyTaskCardTranslations();
+        }
+    }, 100);
 }
 
 // Update user information display
@@ -745,12 +776,66 @@ function updateUserInfo() {
     }
 }
 
-// Update dashboard counts (removed dashboard cards)
+// Update dashboard counts
 function updateDashboardCounts() {
-    // Dashboard cards removed, no counts to update
-                return;
-            }
-            
+    if (!userData) return;
+    
+    // Update notes count if notes section exists
+    const notesCount = userData.notes ? userData.notes.length : 0;
+    const notesCountElement = document.getElementById('notesCount');
+    if (notesCountElement) {
+        notesCountElement.textContent = notesCount;
+    }
+    
+    // Update other counts with translations
+    const tasksCount = userData.tasks ? userData.tasks.length : 0;
+    const tasksCountElement = document.getElementById('tasksCount');
+    if (tasksCountElement) {
+        tasksCountElement.textContent = tasksCount;
+    }
+    
+    const projectsCount = userData.projects ? userData.projects.length : 0;
+    const projectsCountElement = document.getElementById('projectsCount');
+    if (projectsCountElement) {
+        projectsCountElement.textContent = projectsCount;
+    }
+    
+    const dailyTasksCount = userData.dailyTasks ? userData.dailyTasks.length : 0;
+    const dailyTasksCountElement = document.getElementById('dailyTasksCount');
+    if (dailyTasksCountElement) {
+        dailyTasksCountElement.textContent = dailyTasksCount;
+    }
+}
+
+// Update dashboard labels with translations
+function updateDashboardLabels() {
+    // Update section titles
+    const recentTasksTitle = document.querySelector('[data-i18n="dashboard.recentTasks"]');
+    if (recentTasksTitle) {
+        recentTasksTitle.textContent = getText('dashboard.recentTasks');
+    }
+    
+    const allTasksTitle = document.querySelector('[data-i18n="dashboard.allTasks"]');
+    if (allTasksTitle) {
+        allTasksTitle.textContent = getText('dashboard.allTasks');
+    }
+    
+    const projectsTitle = document.querySelector('[data-i18n="dashboard.projects"]');
+    if (projectsTitle) {
+        projectsTitle.textContent = getText('dashboard.projects');
+    }
+    
+    const dailyTasksTitle = document.querySelector('[data-i18n="dashboard.dailyTasks"]');
+    if (dailyTasksTitle) {
+        dailyTasksTitle.textContent = getText('dashboard.dailyTasks');
+    }
+    
+    const notesTitle = document.querySelector('[data-i18n="settings.notes"]');
+    if (notesTitle) {
+        notesTitle.textContent = getText('settings.notes');
+    }
+}
+
 // Render recent tasks
 function renderRecentTasks() {
     if (!userData || !userData.tasks) return;
@@ -767,6 +852,57 @@ function renderRecentTasks() {
         const taskCard = createTaskCard(task);
         tasksGrid.appendChild(taskCard);
     });
+    
+    // Force update translations for task cards
+    if (typeof i18n !== 'undefined' && i18n.t) {
+        updateTaskCardTranslations();
+    }
+    
+    // Add drag and drop event listeners (only once)
+    if (!tasksGrid.hasAttribute('data-drag-initialized')) {
+        tasksGrid.addEventListener('dragover', handleDragOver);
+        tasksGrid.addEventListener('dragenter', handleDragEnter);
+        tasksGrid.addEventListener('dragleave', handleDragLeave);
+        tasksGrid.addEventListener('drop', (e) => handleDrop(e, 'tasks'));
+        tasksGrid.setAttribute('data-drag-initialized', 'true');
+    }
+}
+
+// Update task card translations
+function updateTaskCardTranslations() {
+    const taskCards = document.querySelectorAll('.task-card');
+    taskCards.forEach(card => {
+        // Update priority text
+        const priorityElement = card.querySelector('.task-priority');
+        if (priorityElement) {
+            const priorityClass = priorityElement.className.match(/priority-(high|medium|low)/);
+            if (priorityClass) {
+                const priority = priorityClass[1];
+                priorityElement.textContent = getText(`tasks.priority${priority.charAt(0).toUpperCase() + priority.slice(1)}`);
+            }
+        }
+        
+        // Update action buttons
+        const completeBtn = card.querySelector('.btn-complete');
+        if (completeBtn) {
+            completeBtn.textContent = getText('common.complete');
+        }
+        
+        const uncompleteBtn = card.querySelector('.btn-uncomplete');
+        if (uncompleteBtn) {
+            uncompleteBtn.textContent = getText('common.undo');
+        }
+        
+        const editBtn = card.querySelector('.btn-edit');
+        if (editBtn) {
+            editBtn.textContent = getText('common.edit');
+        }
+        
+        const deleteBtn = card.querySelector('.btn-delete');
+        if (deleteBtn) {
+            deleteBtn.textContent = getText('common.delete');
+        }
+    });
 }
 
 // Create task card element
@@ -774,12 +910,12 @@ function createTaskCard(task) {
     const taskCard = document.createElement('div');
     taskCard.className = `task-card ${task.status === 'completed' ? 'completed' : ''}`;
     taskCard.dataset.itemId = task.id;
-    taskCard.draggable = true;
     taskCard.onclick = () => showTaskDetails(task);
     
-    // Add drag and drop event listeners
+    // Drag and drop functionality enabled
+    taskCard.draggable = true;
     taskCard.addEventListener('dragstart', (e) => handleDragStart(e, taskCard, 'tasks', task.id));
-    taskCard.addEventListener('dragend', () => taskCard.classList.remove('dragging'));
+    taskCard.addEventListener('dragend', (e) => handleDragEnd(e, taskCard));
     
     const priorityClass = getPriorityClass(task.priority);
     const projectName = getProjectName(task.projectId);
@@ -792,11 +928,11 @@ function createTaskCard(task) {
                 <div class="task-priority ${priorityClass}">${getPriorityText(task.priority)}</div>
             </div>
         </div>
-        <div class="task-description">${task.description || (typeof i18n !== 'undefined' ? i18n.t('tasks.noDescription') : 'No description')}</div>
+        <div class="task-description">${task.description || getText('tasks.noDescription')}</div>
         <div class="task-meta">
             <div class="task-project">
                 <div class="project-color" style="background-color: ${projectColor}"></div>
-                <span>${projectName || (typeof i18n !== 'undefined' ? i18n.t('tasks.noProject') : 'No Project')}</span>
+                <span>${projectName || getText('tasks.noProject')}</span>
             </div>
             <span>${task.taskType === 'range' ? 
                 formatDateRange(task.startDate, task.dueDate) : 
@@ -804,11 +940,11 @@ function createTaskCard(task) {
         </div>
         <div class="task-actions">
             ${task.status === 'completed' 
-                ? `<button class="action-btn btn-uncomplete" onclick="event.stopPropagation(); uncompleteTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.undo') : 'Undo'}</button>`
-                : `<button class="action-btn btn-complete" onclick="event.stopPropagation(); completeTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.complete') : 'Complete'}</button>`
+                ? `<button class="action-btn btn-uncomplete" onclick="event.stopPropagation(); uncompleteTask('${task.id}')">${getText('common.undo')}</button>`
+                : `<button class="action-btn btn-complete" onclick="event.stopPropagation(); completeTask('${task.id}')">${getText('common.complete')}</button>`
             }
-            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.edit') : 'Edit'}</button>
-            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.delete') : 'Delete'}</button>
+            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editTask('${task.id}')">${getText('common.edit')}</button>
+            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteTask('${task.id}')">${getText('common.delete')}</button>
         </div>
     `;
     
@@ -827,29 +963,19 @@ function getPriorityClass(priority) {
 
 // Get priority text
 function getPriorityText(priority) {
-    if (typeof i18n !== 'undefined' && i18n.t) {
-        switch (priority) {
-            case 'high': return i18n.t('tasks.priorityHigh');
-            case 'medium': return i18n.t('tasks.priorityMedium');
-            case 'low': return i18n.t('tasks.priorityLow');
-            default: return i18n.t('tasks.priorityMedium');
-        }
-    } else {
-        // Fallback if i18n is not available
-        switch (priority) {
-            case 'high': return 'High';
-            case 'medium': return 'Medium';
-            case 'low': return 'Low';
-            default: return 'Medium';
-        }
+    switch (priority) {
+        case 'high': return getText('tasks.priorityHigh');
+        case 'medium': return getText('tasks.priorityMedium');
+        case 'low': return getText('tasks.priorityLow');
+        default: return getText('tasks.priorityMedium');
     }
 }
 
 // Get project name by ID
 function getProjectName(projectId) {
-    if (!userData || !userData.projects) return typeof i18n !== 'undefined' ? i18n.t('tasks.noProject') : 'No Project';
+    if (!userData || !userData.projects) return getText('tasks.noProject');
     const project = userData.projects.find(p => p.id === projectId);
-    return project ? project.title : (typeof i18n !== 'undefined' ? i18n.t('tasks.noProject') : 'No Project');
+    return project ? project.title : getText('tasks.noProject');
 }
 
 // Get project color by ID
@@ -861,10 +987,10 @@ function getProjectColor(projectId) {
 
 // Format date for display
 function formatDate(dateString) {
-    if (!dateString) return typeof i18n !== 'undefined' ? i18n.t('tasks.noDueDate') : 'No due date';
+    if (!dateString) return getText('tasks.noDueDate');
     
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return typeof i18n !== 'undefined' ? i18n.t('tasks.invalidDate') : 'Invalid date';
+    if (isNaN(date.getTime())) return getText('tasks.invalidDate');
     
     const now = new Date();
     const diffTime = date - now;
@@ -877,16 +1003,16 @@ function formatDate(dateString) {
     const formattedDate = `${day}-${month}-${year}`;
     
     if (diffDays < 0) {
-        const overdueText = typeof i18n !== 'undefined' ? i18n.t('tasks.daysOverdue', { days: Math.abs(diffDays) }) : `${Math.abs(diffDays)} days overdue`;
+        const overdueText = getText('tasks.daysOverdue').replace('{days}', Math.abs(diffDays));
         return `${formattedDate} (${overdueText})`;
     } else if (diffDays === 0) {
-        const dueTodayText = typeof i18n !== 'undefined' ? i18n.t('tasks.dueToday') : 'Due today';
+        const dueTodayText = getText('tasks.dueToday');
         return `${formattedDate} (${dueTodayText})`;
     } else if (diffDays === 1) {
-        const dueTomorrowText = typeof i18n !== 'undefined' ? i18n.t('tasks.dueTomorrow') : 'Due tomorrow';
+        const dueTomorrowText = getText('tasks.dueTomorrow');
         return `${formattedDate} (${dueTomorrowText})`;
     } else {
-        const dueInText = typeof i18n !== 'undefined' ? i18n.t('tasks.dueIn', { days: diffDays }) : `Due in ${diffDays} days`;
+        const dueInText = getText('tasks.dueIn').replace('{days}', diffDays);
         return `${formattedDate} (${dueInText})`;
     }
 }
@@ -900,7 +1026,12 @@ function isToday(date) {
 }
 
 // Show section based on navigation
-function showSection(sectionName) {
+async function showSection(sectionName) {
+    // Check if i18n is ready, if not show loading screen
+    if (typeof i18n === 'undefined' || !i18n.t || typeof i18n.t !== 'function') {
+        showLoadingScreen();
+    }
+    
     // Hide all sections
     const sections = document.querySelectorAll('.content-section');
     sections.forEach(section => section.style.display = 'none');
@@ -922,8 +1053,14 @@ function showSection(sectionName) {
     // Scroll to top of main content and sidebar
     scrollToTop();
     
+    // Wait for i18n to be ready
+    await waitForI18n();
+    
     // Load section data
-    loadSectionData(sectionName);
+    await loadSectionData(sectionName);
+    
+    // Hide loading screen if it was shown
+    hideLoadingScreen();
 }
 
 // Scroll to top of main content and sidebar
@@ -977,11 +1114,42 @@ function throttledResizeHandler() {
 document.addEventListener('scroll', debouncedScrollHandler, { passive: true });
 window.addEventListener('resize', throttledResizeHandler, { passive: true });
 
+// Wait for i18n system to be ready
+async function waitForI18n() {
+    return new Promise((resolve) => {
+        const checkI18n = () => {
+            if (typeof i18n !== 'undefined' && i18n.t && typeof i18n.t === 'function') {
+                resolve();
+            } else {
+                setTimeout(checkI18n, 50);
+            }
+        };
+        checkI18n();
+    });
+}
+
+// Show loading screen
+function showLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+    }
+}
+
+// Hide loading screen
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
+}
+
 // Load data for specific section
 async function loadSectionData(sectionName) {
     switch (sectionName) {
         case 'dashboard':
             updateDashboardCounts();
+            updateDashboardLabels();
             renderRecentTasks();
             break;
         case 'tasks':
@@ -992,6 +1160,9 @@ async function loadSectionData(sectionName) {
             break;
         case 'daily':
             renderDailyTasks();
+            break;
+        case 'notes':
+            renderNotes();
             break;
         case 'profile':
             renderProfileForm();
@@ -1017,6 +1188,11 @@ function renderAllTasks() {
         const taskCard = createTaskCard(task);
         tasksGrid.appendChild(taskCard);
     });
+    
+    // Force update translations for task cards
+    if (typeof i18n !== 'undefined' && i18n.t) {
+        updateTaskCardTranslations();
+    }
 }
 
 // Render projects
@@ -1030,6 +1206,37 @@ function renderProjects() {
         const projectCard = createProjectCard(project);
         projectsGrid.appendChild(projectCard);
     });
+    
+    // Force update translations for project cards
+    if (typeof i18n !== 'undefined' && i18n.t) {
+        updateProjectCardTranslations();
+    }
+    
+    // Add drag and drop event listeners (only once)
+    if (!projectsGrid.hasAttribute('data-drag-initialized')) {
+        projectsGrid.addEventListener('dragover', handleDragOver);
+        projectsGrid.addEventListener('dragenter', handleDragEnter);
+        projectsGrid.addEventListener('dragleave', handleDragLeave);
+        projectsGrid.addEventListener('drop', (e) => handleDrop(e, 'projects'));
+        projectsGrid.setAttribute('data-drag-initialized', 'true');
+    }
+}
+
+// Update project card translations
+function updateProjectCardTranslations() {
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        // Update action buttons
+        const editBtn = card.querySelector('.btn-edit');
+        if (editBtn) {
+            editBtn.textContent = getText('common.edit');
+        }
+        
+        const deleteBtn = card.querySelector('.btn-delete');
+        if (deleteBtn) {
+            deleteBtn.textContent = getText('common.delete');
+        }
+    });
 }
 
 // Create project card
@@ -1037,13 +1244,13 @@ function createProjectCard(project) {
     const projectCard = document.createElement('div');
     projectCard.className = 'dashboard-card project-card';
     projectCard.dataset.itemId = project.id;
-    projectCard.draggable = true;
     
     const taskCount = userData.tasks.filter(task => task.projectId === project.id).length;
     
-    // Add drag and drop event listeners
+    // Drag and drop functionality enabled
+    projectCard.draggable = true;
     projectCard.addEventListener('dragstart', (e) => handleDragStart(e, projectCard, 'projects', project.id));
-    projectCard.addEventListener('dragend', () => projectCard.classList.remove('dragging'));
+    projectCard.addEventListener('dragend', (e) => handleDragEnd(e, projectCard));
     
     projectCard.innerHTML = `
         <div class="card-header">
@@ -1053,10 +1260,10 @@ function createProjectCard(project) {
             </div>
             <span class="card-count">${taskCount}</span>
         </div>
-        <p>${project.description || (typeof i18n !== 'undefined' ? i18n.t('projects.noDescription') : 'No description')}</span>
+        <p>${project.description || getText('projects.noDescription')}</p>
         <div class="task-actions">
-            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editProject('${project.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.edit') : 'Edit'}</button>
-            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProject('${project.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.delete') : 'Delete'}</button>
+            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editProject('${project.id}')">${getText('common.edit')}</button>
+            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProject('${project.id}')">${getText('common.delete')}</button>
         </div>
     `;
     
@@ -1074,6 +1281,42 @@ function renderDailyTasks() {
         const dailyTaskCard = createDailyTaskCard(dailyTask);
         dailyTasksGrid.appendChild(dailyTaskCard);
     });
+    
+    // Force update translations for daily task cards
+    if (typeof i18n !== 'undefined' && i18n.t) {
+        updateDailyTaskCardTranslations();
+    }
+    
+    // Add drag and drop event listeners (only once)
+    if (!dailyTasksGrid.hasAttribute('data-drag-initialized')) {
+        dailyTasksGrid.addEventListener('dragover', handleDragOver);
+        dailyTasksGrid.addEventListener('dragenter', handleDragEnter);
+        dailyTasksGrid.addEventListener('dragleave', handleDragLeave);
+        dailyTasksGrid.addEventListener('drop', (e) => handleDrop(e, 'dailyTasks'));
+        dailyTasksGrid.setAttribute('data-drag-initialized', 'true');
+    }
+}
+
+// Update daily task card translations
+function updateDailyTaskCardTranslations() {
+    const dailyTaskCards = document.querySelectorAll('.dashboard-card');
+    dailyTaskCards.forEach(card => {
+        // Update action buttons
+        const completeBtn = card.querySelector('.btn-complete');
+        if (completeBtn) {
+            completeBtn.textContent = getText('common.complete');
+        }
+        
+        const editBtn = card.querySelector('.btn-edit');
+        if (editBtn) {
+            editBtn.textContent = getText('common.edit');
+        }
+        
+        const deleteBtn = card.querySelector('.btn-delete');
+        if (deleteBtn) {
+            deleteBtn.textContent = getText('common.delete');
+        }
+    });
 }
 
 // Create daily task card
@@ -1081,13 +1324,14 @@ function createDailyTaskCard(dailyTask) {
     const dailyTaskCard = document.createElement('div');
     dailyTaskCard.className = 'dashboard-card';
     dailyTaskCard.dataset.itemId = dailyTask.id;
-    dailyTaskCard.draggable = true;
     
     const today = window.getTodayDate ? window.getTodayDate() : new Date().toISOString().split('T')[0]; // Use debug time if available
     
-    // Add drag and drop event listeners
+    // Drag and drop functionality enabled
+    dailyTaskCard.draggable = true;
     dailyTaskCard.addEventListener('dragstart', (e) => handleDragStart(e, dailyTaskCard, 'dailyTasks', dailyTask.id));
-    dailyTaskCard.addEventListener('dragend', () => dailyTaskCard.classList.remove('dragging'));
+    dailyTaskCard.addEventListener('dragend', (e) => handleDragEnd(e, dailyTaskCard));
+    
     const isCompletedToday = dailyTask.progress.completedDates.includes(today);
     
     // Check if task is active for today (based on selected days)
@@ -1100,9 +1344,9 @@ function createDailyTaskCard(dailyTask) {
     dailyTaskCard.innerHTML = `
         <div class="card-content">
             <div class="card-title">${dailyTask.title}</div>
-            <div class="card-description">${dailyTask.description || (typeof i18n !== 'undefined' ? i18n.t('dailyTasks.noDescription') : 'No description')}</div>
+            <div class="card-description">${dailyTask.description || getText('dailyTasks.noDescription')}</div>
             <div class="card-info">
-                <div class="card-category">${dailyTask.category || (typeof i18n !== 'undefined' ? i18n.t('dailyTasks.noCategory') : 'No category')}</div>
+                <div class="card-category">${dailyTask.category || getText('dailyTasks.noCategory')}</div>
                 <div class="card-time">${dailyTask.schedule.recurrence.time}</div>
                 <div class="card-days">${formatDays(dailyTask.schedule.recurrence.days)}</div>
             </div>
@@ -1111,10 +1355,10 @@ function createDailyTaskCard(dailyTask) {
             <button class="btn ${isCompletedToday ? 'btn-complete' : 'btn-edit'}" 
                     onclick="event.stopPropagation(); ${isCompletedToday ? 'uncompleteDailyTask' : 'completeDailyTask'}('${dailyTask.id}')"
                     ${!isActiveToday ? 'disabled' : ''}>
-                ${isCompletedToday ? '✓' : (typeof i18n !== 'undefined' ? i18n.t('common.complete') : 'Complete')}
+                ${isCompletedToday ? '✓' : getText('common.complete')}
             </button>
-            <button class="btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.edit') : 'Edit'}</button>
-            <button class="btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.delete') : 'Delete'}</button>
+            <button class="btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">${getText('common.edit')}</button>
+            <button class="btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">${getText('common.delete')}</button>
         </div>
     `;
     
@@ -1855,16 +2099,16 @@ function formatDateRange(startDate, endDate) {
 
 // Format days array to readable text
 function formatDays(days) {
-    if (!days || days.length === 0) return 'No days';
+    if (!days || days.length === 0) return getText('dailyTasks.noDays');
     
     const dayNames = {
-        'mon': 'M',
-        'tue': 'T', 
-        'wed': 'W',
-        'thu': 'T',
-        'fri': 'F',
-        'sat': 'S',
-        'sun': 'S'
+        'mon': getText('dailyTasks.monday').charAt(0),
+        'tue': getText('dailyTasks.tuesday').charAt(0), 
+        'wed': getText('dailyTasks.wednesday').charAt(0),
+        'thu': getText('dailyTasks.thursday').charAt(0),
+        'fri': getText('dailyTasks.friday').charAt(0),
+        'sat': getText('dailyTasks.saturday').charAt(0),
+        'sun': getText('dailyTasks.sunday').charAt(0)
     };
     
     // Return individual day tags with single letter abbreviations
@@ -1873,7 +2117,7 @@ function formatDays(days) {
 
 // Get next active day for daily tasks
 function getNextActiveDay(selectedDays) {
-    if (!selectedDays || selectedDays.length === 0) return 'No days selected';
+    if (!selectedDays || selectedDays.length === 0) return getText('dailyTasks.noDaysSelected');
     
     const today = window.getDebugTime ? window.getDebugTime() : new Date(); // Use debug time if available
     const todayDay = today.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
@@ -1890,7 +2134,7 @@ function getNextActiveDay(selectedDays) {
     
     // First check if today is in the list
     if (selectedDays.includes(todayDay)) {
-        return 'Today';
+        return getText('dates.today');
     }
     
     // Find next day in current week
@@ -1909,13 +2153,13 @@ function getNextActiveDay(selectedDays) {
     
     // Convert to readable format
     const dayNames = {
-        'mon': 'Monday',
-        'tue': 'Tuesday', 
-        'wed': 'Wednesday',
-        'thu': 'Thursday',
-        'fri': 'Friday',
-        'sat': 'Saturday',
-        'sun': 'Sunday'
+        'mon': getText('dailyTasks.monday'),
+        'tue': getText('dailyTasks.tuesday'), 
+        'wed': getText('dailyTasks.wednesday'),
+        'thu': getText('dailyTasks.thursday'),
+        'fri': getText('dailyTasks.friday'),
+        'sat': getText('dailyTasks.saturday'),
+        'sun': getText('dailyTasks.sunday')
     };
     
     return dayNames[nextDay] || nextDay;
@@ -2879,6 +3123,10 @@ function handleDragStart(e, element, dataType, itemId) {
     e.dataTransfer.effectAllowed = 'move';
 }
 
+function handleDragEnd(e, element) {
+    element.classList.remove('dragging');
+}
+
 function handleDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -2886,7 +3134,7 @@ function handleDragOver(e) {
 
 function handleDragEnter(e) {
     e.preventDefault();
-    const target = e.target.closest('.task-card, .dashboard-card');
+    const target = e.target.closest('.task-card, .dashboard-card, .note-card');
     const grid = e.target.closest('[id$="Grid"]');
     
     if (target) {
@@ -2899,7 +3147,7 @@ function handleDragEnter(e) {
 }
 
 function handleDragLeave(e) {
-    const target = e.target.closest('.task-card, .dashboard-card');
+    const target = e.target.closest('.task-card, .dashboard-card, .note-card');
     const grid = e.target.closest('[id$="Grid"]');
     
     if (target) {
@@ -2921,23 +3169,27 @@ async function handleDrop(e, dataType) {
         if (!targetGrid || !dragData || dragData.type !== dataType) return;
         
         // Remove drag-over styling
-        const cards = targetGrid.querySelectorAll('.task-card, .dashboard-card');
+        const cards = targetGrid.querySelectorAll('.task-card, .dashboard-card, .note-card');
         cards.forEach(card => card.classList.remove('drag-over'));
+        targetGrid.classList.remove('drag-over');
         
         // Get the dragged element
         const draggedElement = document.querySelector('.dragging');
         if (!draggedElement) return;
         
-        // Remove dragging class
-        draggedElement.classList.remove('dragging');
+        // Verify the dragged element is in the correct grid
+        if (!targetGrid.contains(draggedElement)) return;
         
         // Get drop position
-        const dropTarget = e.target.closest('.task-card, .dashboard-card');
+        const dropTarget = e.target.closest('.task-card, .dashboard-card, .note-card');
         if (!dropTarget || dropTarget === draggedElement) return;
         
         // Get the target item ID
         const targetId = dropTarget.dataset.itemId;
         if (!targetId) return;
+        
+        // Check if we're dropping on the same item
+        if (dragData.id === targetId) return;
         
         // Reorder the data array
         await reorderItems(dragData.type, dragData.id, targetId, targetGrid.id);
@@ -2945,17 +3197,40 @@ async function handleDrop(e, dataType) {
         // Re-render the grid
         switch (dataType) {
             case 'tasks':
-                if (targetGrid.id === 'recentTasksGrid') {
-                    renderRecentTasks();
-                } else {
-                    renderAllTasks();
+                // For tasks, just reorder the DOM elements instead of re-rendering
+                const draggedTaskElement = targetGrid.querySelector(`[data-item-id="${dragData.id}"]`);
+                const targetTaskElement = targetGrid.querySelector(`[data-item-id="${targetId}"]`);
+                if (draggedTaskElement && targetTaskElement) {
+                    const parent = targetTaskElement.parentNode;
+                    parent.insertBefore(draggedTaskElement, targetTaskElement);
                 }
                 break;
             case 'projects':
-                renderProjects();
+                // For projects, just reorder the DOM elements instead of re-rendering
+                const draggedProjectElement = targetGrid.querySelector(`[data-item-id="${dragData.id}"]`);
+                const targetProjectElement = targetGrid.querySelector(`[data-item-id="${targetId}"]`);
+                if (draggedProjectElement && targetProjectElement) {
+                    const parent = targetProjectElement.parentNode;
+                    parent.insertBefore(draggedProjectElement, targetProjectElement);
+                }
                 break;
             case 'dailyTasks':
-                renderDailyTasks();
+                // For daily tasks, just reorder the DOM elements instead of re-rendering
+                const draggedDailyTaskElement = targetGrid.querySelector(`[data-item-id="${dragData.id}"]`);
+                const targetDailyTaskElement = targetGrid.querySelector(`[data-item-id="${targetId}"]`);
+                if (draggedDailyTaskElement && targetDailyTaskElement) {
+                    const parent = targetDailyTaskElement.parentNode;
+                    parent.insertBefore(draggedDailyTaskElement, targetDailyTaskElement);
+                }
+                break;
+            case 'notes':
+                // For notes, just reorder the DOM elements instead of re-rendering
+                const draggedElement = targetGrid.querySelector(`[data-item-id="${dragData.id}"]`);
+                const targetElement = targetGrid.querySelector(`[data-item-id="${targetId}"]`);
+                if (draggedElement && targetElement) {
+                    const parent = targetElement.parentNode;
+                    parent.insertBefore(draggedElement, targetElement);
+                }
                 break;
         }
         
@@ -2982,6 +3257,9 @@ async function reorderItems(dataType, draggedId, targetId, gridId) {
             case 'dailyTasks':
                 dataArray = userData.dailyTasks;
                 break;
+            case 'notes':
+                dataArray = userData.notes;
+                break;
             default:
                 return;
         }
@@ -2991,6 +3269,9 @@ async function reorderItems(dataType, draggedId, targetId, gridId) {
         const targetIndex = dataArray.findIndex(item => item.id === targetId);
         
         if (draggedIndex === -1 || targetIndex === -1) return;
+        
+        // Don't reorder if it's the same position
+        if (draggedIndex === targetIndex) return;
         
         // Reorder the array
         const [draggedItem] = dataArray.splice(draggedIndex, 1);
@@ -3003,6 +3284,61 @@ async function reorderItems(dataType, draggedId, targetId, gridId) {
         
         // Update local data
         userData[dataType] = dataArray;
+        
+        // For notes, projects, and tasks, also update the DOM order to match the new array order
+        if (dataType === 'notes') {
+            const notesGrid = document.getElementById('notesGrid');
+            if (notesGrid) {
+                dataArray.forEach(note => {
+                    const noteElement = notesGrid.querySelector(`[data-item-id="${note.id}"]`);
+                    if (noteElement) {
+                        notesGrid.appendChild(noteElement);
+                    }
+                });
+            }
+        } else if (dataType === 'projects') {
+            const projectsGrid = document.getElementById('projectsGrid');
+            if (projectsGrid) {
+                dataArray.forEach(project => {
+                    const projectElement = projectsGrid.querySelector(`[data-item-id="${project.id}"]`);
+                    if (projectElement) {
+                        projectsGrid.appendChild(projectElement);
+                    }
+                });
+            }
+        } else if (dataType === 'tasks') {
+            // Update both recent tasks and all tasks grids
+            const recentTasksGrid = document.getElementById('recentTasksGrid');
+            const allTasksGrid = document.getElementById('allTasksGrid');
+            
+            if (recentTasksGrid) {
+                dataArray.forEach(task => {
+                    const taskElement = recentTasksGrid.querySelector(`[data-item-id="${task.id}"]`);
+                    if (taskElement) {
+                        recentTasksGrid.appendChild(taskElement);
+                    }
+                });
+            }
+            
+            if (allTasksGrid) {
+                dataArray.forEach(task => {
+                    const taskElement = allTasksGrid.querySelector(`[data-item-id="${task.id}"]`);
+                    if (taskElement) {
+                        allTasksGrid.appendChild(taskElement);
+                    }
+                });
+            }
+        } else if (dataType === 'dailyTasks') {
+            const dailyTasksGrid = document.getElementById('dailyTasksGrid');
+            if (dailyTasksGrid) {
+                dataArray.forEach(dailyTask => {
+                    const dailyTaskElement = dailyTasksGrid.querySelector(`[data-item-id="${dailyTask.id}"]`);
+                    if (dailyTaskElement) {
+                        dailyTasksGrid.appendChild(dailyTaskElement);
+                    }
+                });
+            }
+        }
         
     } catch (error) {
         console.error('Failed to reorder items:', error);
@@ -3969,5 +4305,546 @@ window.selectCountry = selectCountry;
 // Global exports for profile functionality
 window.saveProfile = saveProfile;
 window.resetProfile = resetProfile;
+
+// ===== NOTES SYSTEM =====
+
+// Show add note modal
+function showAddNoteModal() {
+    if (!currentUser || !currentUser.uid) {
+        showStatus('Please login to add notes', 'error');
+        return;
+    }
+    
+    document.getElementById('addNoteModal').style.display = 'flex';
+    setupFormValidation('addNoteForm', handleAddNote);
+}
+
+// Show add shopping list modal
+function showAddShoppingListModal() {
+    if (!currentUser || !currentUser.uid) {
+        showStatus('Please login to add shopping lists', 'error');
+        return;
+    }
+    
+    document.getElementById('addShoppingListModal').style.display = 'flex';
+    setupFormValidation('addShoppingListForm', handleAddShoppingList);
+}
+
+// Handle add note
+async function handleAddNote(event) {
+    if (!currentUser || !currentUser.uid) {
+        showStatus('Please login to add notes', 'error');
+        return;
+    }
+
+    const formData = new FormData(event.target);
+    const noteData = {
+        id: generateId(),
+        title: formData.get('noteTitle'),
+        content: formData.get('noteContent'),
+        type: formData.get('noteType'),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        userId: currentUser.uid
+    };
+
+    try {
+        if (!userData.notes) userData.notes = [];
+        userData.notes.push(noteData);
+        
+        await db.collection('user_data').doc(currentUser.uid).update({
+            notes: userData.notes
+        });
+        
+        addActivityLog('note_created', 'Note created', noteData.id);
+        
+        updateDashboardCounts();
+        renderNotes();
+        
+        closeModal('addNoteModal');
+        showStatus(getText('settings.noteAdded'), 'success');
+        
+    } catch (error) {
+        console.error('Failed to add note:', error);
+        showStatus('Failed to add note: ' + error.message, 'error');
+    }
+}
+
+// Handle add shopping list
+async function handleAddShoppingList(event) {
+    if (!currentUser || !currentUser.uid) {
+        showStatus('Please login to add shopping lists', 'error');
+        return;
+    }
+
+    const formData = new FormData(event.target);
+    const items = [];
+    
+    // Collect shopping items
+    const itemRows = document.querySelectorAll('.shopping-item-row');
+    itemRows.forEach(row => {
+        const itemInput = row.querySelector('.shopping-item');
+        const quantityInput = row.querySelector('.shopping-quantity');
+        if (itemInput.value.trim()) {
+            items.push({
+                item: itemInput.value.trim(),
+                quantity: parseInt(quantityInput.value) || 1,
+                completed: false
+            });
+        }
+    });
+
+    const shoppingListData = {
+        id: generateId(),
+        title: formData.get('shoppingListTitle'),
+        description: formData.get('shoppingListDescription'),
+        type: 'shopping',
+        items: items,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        userId: currentUser.uid
+    };
+
+    try {
+        if (!userData.notes) userData.notes = [];
+        userData.notes.push(shoppingListData);
+        
+        await db.collection('user_data').doc(currentUser.uid).update({
+            notes: userData.notes
+        });
+        
+        addActivityLog('shopping_list_created', 'Shopping list created', shoppingListData.id);
+        
+        updateDashboardCounts();
+        renderNotes();
+        
+        closeModal('addShoppingListModal');
+        showStatus(getText('settings.shoppingListAdded'), 'success');
+        
+    } catch (error) {
+        console.error('Failed to add shopping list:', error);
+        showStatus('Failed to add shopping list: ' + error.message, 'error');
+    }
+}
+
+// Render notes
+function renderNotes() {
+    const notesGrid = document.getElementById('notesGrid');
+    if (!notesGrid) return;
+
+    notesGrid.innerHTML = '';
+
+    if (!userData || !userData.notes || userData.notes.length === 0) {
+        notesGrid.innerHTML = `
+            <div class="no-data">
+                <p data-i18n="settings.noNotes">${getText('settings.noNotes')}</p>
+            </div>
+        `;
+        return;
+    }
+
+    userData.notes.forEach(note => {
+        const noteCard = createNoteCard(note);
+        notesGrid.appendChild(noteCard);
+    });
+
+    // Add drag and drop event listeners to notes grid (only once)
+    if (!notesGrid.hasAttribute('data-drag-initialized')) {
+        notesGrid.addEventListener('dragover', handleDragOver);
+        notesGrid.addEventListener('dragenter', handleDragEnter);
+        notesGrid.addEventListener('dragleave', handleDragLeave);
+        notesGrid.addEventListener('drop', (e) => handleDrop(e, 'notes'));
+        notesGrid.setAttribute('data-drag-initialized', 'true');
+    }
+}
+
+// Create note card
+function createNoteCard(note) {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    card.dataset.itemId = note.id;
+    card.dataset.itemType = 'note';
+    card.draggable = true;
+    
+    // Add drag and drop event listeners
+    let isDragging = false;
+    card.addEventListener('dragstart', (e) => {
+        handleDragStart(e, card, 'notes', note.id);
+        isDragging = true;
+    });
+    card.addEventListener('dragend', (e) => {
+        handleDragEnd(e, card);
+        isDragging = false;
+        setTimeout(() => { isDragging = false; }, 100);
+    });
+    
+    card.onclick = (e) => {
+        if (!isDragging) {
+            showNoteDetails(note);
+        }
+    };
+
+    let content = '';
+    if (note.type === 'shopping') {
+        const completedItems = note.items ? note.items.filter(item => item.completed).length : 0;
+        const totalItems = note.items ? note.items.length : 0;
+        const progressPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+        
+        content = `
+            <div class="note-header">
+                <h3 class="note-title">${note.title}</h3>
+                <span class="note-type shopping" data-i18n="settings.shoppingList">${getText('settings.shoppingList')}</span>
+            </div>
+            <div class="note-content">${note.description || ''}</div>
+            <div class="shopping-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                </div>
+                <span class="progress-text">${completedItems}/${totalItems} ${getText('settings.completed')}</span>
+            </div>
+            <div class="shopping-items-preview">
+                ${note.items && note.items.length > 0 ? note.items.slice(0, 3).map(item => `
+                    <div class="shopping-item-preview ${item.completed ? 'completed' : ''}">
+                        <input type="checkbox" class="item-checkbox-small" 
+                               ${item.completed ? 'checked' : ''} 
+                               onchange="toggleShoppingItem('${note.id}', '${item.item}')">
+                                                 <span class="item-text">${item.item} (${item.quantity})</span>
+                    </div>
+                `).join('') : `<span class="no-items">${getText('settings.noShoppingLists')}</span>`}
+                ${note.items && note.items.length > 3 ? `<span class="more-items">+${note.items.length - 3} more</span>` : ''}
+            </div>
+            <div class="note-footer">
+                <span>${formatDate(note.createdAt)}</span>
+                <div class="note-actions">
+                    <button class="btn-edit" onclick="editNote('${note.id}')" data-i18n="settings.editNote">${getText('settings.editNote')}</button>
+                    <button class="btn-delete" onclick="deleteNote('${note.id}')" data-i18n="settings.deleteNote">${getText('settings.deleteNote')}</button>
+                </div>
+            </div>
+        `;
+    } else {
+        content = `
+            <div class="note-header">
+                <h3 class="note-title">${note.title}</h3>
+                <span class="note-type ${note.type}" data-i18n="settings.noteType${note.type.charAt(0).toUpperCase() + note.type.slice(1)}">${getText(`settings.noteType${note.type.charAt(0).toUpperCase() + note.type.slice(1)}`)}</span>
+            </div>
+            <div class="note-content">${note.content}</div>
+            <div class="note-footer">
+                <span>${formatDate(note.createdAt)}</span>
+                <div class="note-actions">
+                    <button class="btn-edit" onclick="editNote('${note.id}')" data-i18n="settings.editNote">${getText('settings.editNote')}</button>
+                    <button class="btn-delete" onclick="deleteNote('${note.id}')" data-i18n="settings.deleteNote">${getText('settings.deleteNote')}</button>
+                </div>
+            </div>
+        `;
+    }
+
+    card.innerHTML = content;
+    return card;
+}
+
+// Filter notes
+function filterNotes(type) {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const notesGrid = document.getElementById('notesGrid');
+    if (!notesGrid) return;
+
+    notesGrid.innerHTML = '';
+
+    if (!userData || !userData.notes) {
+        notesGrid.innerHTML = `
+            <div class="no-data">
+                <p data-i18n="settings.noNotes">${getText('settings.noNotes')}</p>
+            </div>
+        `;
+        return;
+    }
+
+    let filteredNotes = userData.notes;
+    if (type !== 'all') {
+        filteredNotes = userData.notes.filter(note => note.type === type);
+    }
+
+    if (filteredNotes.length === 0) {
+        notesGrid.innerHTML = `
+            <div class="no-data">
+                <p data-i18n="settings.noNotes">${getText('settings.noNotes')}</p>
+            </div>
+        `;
+        return;
+    }
+
+    filteredNotes.forEach(note => {
+        const noteCard = createNoteCard(note);
+        notesGrid.appendChild(noteCard);
+    });
+}
+
+// Add shopping item row
+function addShoppingItem() {
+    const container = document.getElementById('shoppingItemsContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'shopping-item-row';
+    newRow.innerHTML = `
+        <div class="item-checkbox">
+            <input type="checkbox" class="item-completed" disabled>
+        </div>
+        <input type="text" class="shopping-item" placeholder="${getText('settings.shoppingItem')}" data-i18n-placeholder="settings.shoppingItem">
+        <input type="number" class="shopping-quantity" placeholder="${getText('settings.shoppingQuantityShort')}" min="1" value="1">
+
+        <button type="button" class="btn-remove" onclick="removeShoppingItem(this)" data-i18n="settings.removeItem">${getText('settings.removeItem')}</button>
+    `;
+    container.appendChild(newRow);
+}
+
+// Remove shopping item row
+function removeShoppingItem(button) {
+    button.parentElement.remove();
+}
+
+// Edit note
+function editNote(noteId) {
+    const note = userData.notes.find(n => n.id === noteId);
+    if (!note) return;
+
+    if (note.type === 'shopping') {
+        showEditShoppingListModal(note);
+    } else {
+        showEditNoteModal(note);
+    }
+}
+
+// Show edit note modal
+function showEditNoteModal(note) {
+    document.getElementById('editNoteId').value = note.id;
+    document.getElementById('editNoteTitle').value = note.title;
+    document.getElementById('editNoteContent').value = note.content;
+    document.getElementById('editNoteType').value = note.type;
+    
+    document.getElementById('editNoteModal').style.display = 'flex';
+    setupFormValidation('editNoteForm', handleEditNote);
+}
+
+// Show edit shopping list modal
+function showEditShoppingListModal(note) {
+    document.getElementById('editShoppingListId').value = note.id;
+    document.getElementById('editShoppingListTitle').value = note.title;
+    document.getElementById('editShoppingListDescription').value = note.description || '';
+    
+    // Load shopping items
+    const container = document.getElementById('editShoppingItemsContainer');
+    container.innerHTML = '';
+    
+    if (note.items && note.items.length > 0) {
+        note.items.forEach(item => {
+            const itemRow = createEditShoppingItemRow(item);
+            container.appendChild(itemRow);
+        });
+    } else {
+        const itemRow = createEditShoppingItemRow();
+        container.appendChild(itemRow);
+    }
+    
+    document.getElementById('editShoppingListModal').style.display = 'flex';
+    setupFormValidation('editShoppingListForm', handleEditShoppingList);
+}
+
+// Create edit shopping item row
+function createEditShoppingItemRow(item = null) {
+    const row = document.createElement('div');
+    row.className = 'shopping-item-row';
+    row.innerHTML = `
+        <div class="item-checkbox">
+            <input type="checkbox" class="item-completed" ${item && item.completed ? 'checked' : ''}>
+        </div>
+        <input type="text" class="shopping-item" placeholder="${getText('settings.shoppingItem')}" data-i18n-placeholder="settings.shoppingItem" value="${item ? item.item : ''}">
+        <input type="number" class="shopping-quantity" placeholder="${getText('settings.shoppingQuantityShort')}" min="1" value="${item ? item.quantity : 1}">
+
+        <button type="button" class="btn-remove" onclick="removeShoppingItem(this)" data-i18n="settings.removeItem">${getText('settings.removeItem')}</button>
+    `;
+    return row;
+}
+
+// Add edit shopping item
+function addEditShoppingItem() {
+    const container = document.getElementById('editShoppingItemsContainer');
+    const newRow = createEditShoppingItemRow();
+    container.appendChild(newRow);
+}
+
+// Handle edit note
+async function handleEditNote(event) {
+    const formData = new FormData(event.target);
+    const noteId = formData.get('editNoteId');
+    
+    const noteIndex = userData.notes.findIndex(n => n.id === noteId);
+    if (noteIndex === -1) return;
+
+    const updatedNote = {
+        ...userData.notes[noteIndex],
+        title: formData.get('editNoteTitle'),
+        content: formData.get('editNoteContent'),
+        type: formData.get('editNoteType'),
+        updatedAt: new Date().toISOString()
+    };
+
+    try {
+        userData.notes[noteIndex] = updatedNote;
+        
+        await db.collection('user_data').doc(currentUser.uid).update({
+            notes: userData.notes
+        });
+        
+        addActivityLog('note_updated', 'Note updated', noteId);
+        
+        updateDashboardCounts();
+        renderNotes();
+        
+        closeModal('editNoteModal');
+        showStatus(getText('settings.noteUpdated'), 'success');
+        
+    } catch (error) {
+        console.error('Failed to update note:', error);
+        showStatus('Failed to update note: ' + error.message, 'error');
+    }
+}
+
+// Handle edit shopping list
+async function handleEditShoppingList(event) {
+    const formData = new FormData(event.target);
+    const noteId = formData.get('editShoppingListId');
+    
+    const noteIndex = userData.notes.findIndex(n => n.id === noteId);
+    if (noteIndex === -1) return;
+
+    const items = [];
+    
+    // Collect shopping items
+    const itemRows = document.querySelectorAll('#editShoppingItemsContainer .shopping-item-row');
+    itemRows.forEach(row => {
+        const itemInput = row.querySelector('.shopping-item');
+        const quantityInput = row.querySelector('.shopping-quantity');
+        const completedCheckbox = row.querySelector('.item-completed');
+        
+        if (itemInput.value.trim()) {
+            items.push({
+                item: itemInput.value.trim(),
+                quantity: parseInt(quantityInput.value) || 1,
+                completed: completedCheckbox.checked
+            });
+        }
+    });
+
+    const updatedNote = {
+        ...userData.notes[noteIndex],
+        title: formData.get('editShoppingListTitle'),
+        description: formData.get('editShoppingListDescription'),
+        items: items,
+        updatedAt: new Date().toISOString()
+    };
+
+    try {
+        userData.notes[noteIndex] = updatedNote;
+        
+        await db.collection('user_data').doc(currentUser.uid).update({
+            notes: userData.notes
+        });
+        
+        addActivityLog('shopping_list_updated', 'Shopping list updated', noteId);
+        
+        updateDashboardCounts();
+        renderNotes();
+        
+        closeModal('editShoppingListModal');
+        showStatus(getText('settings.shoppingListUpdated'), 'success');
+        
+    } catch (error) {
+        console.error('Failed to update shopping list:', error);
+        showStatus('Failed to update shopping list: ' + error.message, 'error');
+    }
+}
+
+// Delete note
+async function deleteNote(noteId) {
+    if (!confirm(getText('settings.confirmDelete'))) return;
+
+    try {
+        userData.notes = userData.notes.filter(note => note.id !== noteId);
+        
+        await db.collection('user_data').doc(currentUser.uid).update({
+            notes: userData.notes
+        });
+        
+        addActivityLog('note_deleted', 'Note deleted', noteId);
+        
+        updateDashboardCounts();
+        renderNotes();
+        
+        showStatus(getText('settings.noteDeleted'), 'success');
+        
+    } catch (error) {
+        console.error('Failed to delete note:', error);
+        showStatus('Failed to delete note: ' + error.message, 'error');
+    }
+}
+
+// Show note details
+function showNoteDetails(note) {
+    // Implementation for showing note details
+    console.log('Show note details:', note);
+}
+
+// Get text from i18n system
+function getText(key) {
+    if (typeof i18n !== 'undefined' && i18n.t) {
+        return i18n.t(key);
+    }
+    // Fallback to key if i18n is not available
+    return key;
+}
+
+// Toggle shopping item completion
+async function toggleShoppingItem(noteId, itemName) {
+    const noteIndex = userData.notes.findIndex(n => n.id === noteId);
+    if (noteIndex === -1) return;
+
+    const note = userData.notes[noteIndex];
+    if (!note.items) return;
+
+    const itemIndex = note.items.findIndex(item => item.item === itemName);
+    if (itemIndex === -1) return;
+
+    // Toggle completion status
+    note.items[itemIndex].completed = !note.items[itemIndex].completed;
+    note.updatedAt = new Date().toISOString();
+
+    try {
+        await db.collection('user_data').doc(currentUser.uid).update({
+            notes: userData.notes
+        });
+        
+        addActivityLog('shopping_item_toggled', 'Shopping item toggled', noteId);
+        
+        updateDashboardCounts();
+        renderNotes();
+        
+    } catch (error) {
+        console.error('Failed to toggle shopping item:', error);
+        showStatus('Failed to toggle item: ' + error.message, 'error');
+    }
+}
+
+// Global exports for notes functionality
+window.showAddNoteModal = showAddNoteModal;
+window.showAddShoppingListModal = showAddShoppingListModal;
+window.addShoppingItem = addShoppingItem;
+window.removeShoppingItem = removeShoppingItem;
+window.editNote = editNote;
+window.deleteNote = deleteNote;
+window.filterNotes = filterNotes;
+window.toggleShoppingItem = toggleShoppingItem;
+window.addEditShoppingItem = addEditShoppingItem;
 
 

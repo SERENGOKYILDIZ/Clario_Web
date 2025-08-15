@@ -40,6 +40,14 @@ A modern and user-friendly project and task management application. Powered by F
 - **Gender Selection**: Modern radio button interface for profile customization
 - **Simplified Settings**: Unified interface for all user preferences and security settings
 
+### 📝 **Notes System**
+- Quick notes creation and management
+- Shopping lists with todo-style completion tracking
+- Drag & drop reordering for better organization
+- Full CRUD operations (Create, Read, Update, Delete)
+- Real-time updates and synchronization
+- Multi-language support for all note content
+
 ### 🎨 **Modern UI/UX**
 - Responsive design
 - Dark theme
@@ -49,12 +57,13 @@ A modern and user-friendly project and task management application. Powered by F
 - **Daily Tasks**: Recurring tasks with streak tracking and drag & drop reordering
 - **Edit Modals**: User-friendly editing interfaces for all content types
 - **Error Handling**: Comprehensive error messages and user feedback
-- **Drag & Drop Interface**: Intuitive card reordering with visual feedback
+- **Enhanced Drag & Drop**: Smooth card reordering for all content types with visual feedback
 - **Visual Indicators**: Drag handles and drop zone highlighting
 - **Tab-Free Interface**: Simplified navigation without complex tab systems
 - **Country Flag Selectors**: Visual country selection with emoji flags
 - **Modern Form Controls**: Enhanced input fields with better validation
 - **Optimized Grid Layouts**: Improved spacing and sizing for better data display
+- **Loading Screens**: i18n-ready loading states for better user experience
 
 ## 🛠️ Technologies
 
@@ -94,10 +103,13 @@ A modern and user-friendly project and task management application. Powered by F
 - ✅ **🎯 Localized Modals**: Add New Project, Add Daily Task, and all form fields translated
 - ✅ **🔑 Localized Buttons**: Logout, Cancel, Save, and all action buttons in multiple languages
 - ✅ **📅 Localized Dates**: Day names, date formats, and time-related text in all languages
-- ✅ **Drag & Drop Reordering**: Intuitive drag and drop interface for tasks, projects, and daily tasks
-- ✅ **Complete CRUD Operations**: Full edit functionality for tasks, projects, and daily tasks
-- ✅ **Enhanced Error Handling**: User-friendly error messages for authentication and data operations
-- ✅ **Real-time UI Updates**: Interface automatically reflects all changes without manual refresh
+- ✅ **📝 Notes System**: Quick notes and shopping list management with CRUD operations
+- ✅ **🛒 Shopping Lists**: Todo-style shopping lists with completion tracking
+- ✅ **🎯 Enhanced Drag & Drop**: Smooth drag & drop reordering for all card types (notes, tasks, projects, daily tasks)
+- ✅ **⚡ Performance Optimized**: DOM manipulation instead of full re-renders for smooth animations
+- ✅ **🔄 Complete CRUD Operations**: Full edit functionality for all content types
+- ✅ **📱 Loading Screen**: i18n-ready loading screen before main app display
+- ✅ **🎨 Smooth Animations**: Visual feedback during drag operations with CSS transitions
 - ✅ **Advanced Date Management**: Support for single dates and date ranges with dd-mm-yyyy format
 - ✅ **Daily Task System**: Recurring tasks with completion tracking and streak calculation
 - ✅ **Modal-based Editing**: Intuitive edit interfaces for all content types
