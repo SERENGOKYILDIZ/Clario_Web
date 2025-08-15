@@ -13,6 +13,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="../images/favicon/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="../images/favicon/android-chrome-512x512.png">
     <link rel="manifest" href="../images/favicon/site.webmanifest">
+    <link rel="stylesheet" href="../css/language-switcher.css">
     <style>
         * {
             margin: 0;
@@ -184,6 +185,8 @@
             height: calc(100vh - 120px);
         }
 
+
+        
         /* Sidebar Styles */
         .sidebar {
             width: 280px;
@@ -1841,6 +1844,75 @@
         }
 
         /* Settings Styles */
+        .settings-group {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-group h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .setting-item {
+            margin-bottom: 20px;
+        }
+        
+        .setting-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+        
+        .setting-item select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .setting-item select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .setting-item select option {
+            background: #2a2a3e;
+            color: #ffffff;
+        }
+        
+        .setting-description {
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+        }
+        
+        .settings-actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        .settings-actions .btn-primary {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 200px;
+        }
+        
         .settings-container {
             max-width: 800px;
             margin: 0 auto;
@@ -2316,33 +2388,35 @@
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">U</div>
                 <span id="userName">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()" data-i18n="settings.logout">Logout</button>
                     </div>
                 </div>
 
         <!-- Main Content -->
         <div class="app-content">
-            <!-- Sidebar -->
+                        <!-- Sidebar -->
             <div class="sidebar">
                 <div class="sidebar-section">
-                    <h3>Dashboard</h3>
+                    <h3 data-i18n="navigation.dashboard">Dashboard</h3>
                     <div class="nav-item active" onclick="showSection('dashboard')">
                         <i>📊</i>
-                        <span>Overview</span>
+                        <span data-i18n="navigation.dashboard">Dashboard</span>
                     </div>
                     <div class="nav-item" onclick="showSection('tasks')">
                         <i>✅</i>
-                        <span>Tasks</span>
+                        <span data-i18n="navigation.tasks">Tasks</span>
                     </div>
                     <div class="nav-item" onclick="showSection('projects')">
                         <i>📁</i>
-                        <span>Projects</span>
+                        <span data-i18n="navigation.projects">Projects</span>
                     </div>
                     <div class="nav-item" onclick="showSection('daily')">
                         <i>📅</i>
-                        <span>Daily Tasks</span>
-            </div>
-    </div>
+                        <span data-i18n="navigation.dailyTasks">Daily Tasks</span>
+                    </div>
+                </div>
+                
+
 
 
             </div>
@@ -2365,27 +2439,27 @@
                             
                             <!-- Management Section Inside Profile -->
                             <div class="management-section-inline">
-                                <h3 class="management-title-inline">Quick Actions</h3>
+                                <h3 class="management-title-inline" data-i18n="dashboard.quickActions">Quick Actions</h3>
                                 <div class="management-grid-inline">
                                     <div class="management-card-inline" onclick="showSection('profile')">
                                         <div class="management-icon-inline">👤</div>
                                         <div class="management-content-inline">
-                                            <h4>Profile</h4>
-                                            <p>Manage profile</p>
+                                            <h4 data-i18n="navigation.profile">Profile</h4>
+                                            <p data-i18n="dashboard.manageProfile">Manage profile</p>
                                         </div>
                                     </div>
                                     <div class="management-card-inline" onclick="showSection('preferences')">
                                         <div class="management-icon-inline">⚙️</div>
                                         <div class="management-content-inline">
-                                            <h4>Settings</h4>
-                                            <p>Configure app</p>
+                                            <h4 data-i18n="navigation.settings">Settings</h4>
+                                            <p data-i18n="dashboard.configureApp">Configure app</p>
                                         </div>
                                     </div>
                                     <div class="management-card-inline" onclick="showSection('activity')">
                                         <div class="management-icon-inline">📈</div>
                                         <div class="management-content-inline">
-                                            <h4>Activity</h4>
-                                            <p>View history</p>
+                                            <h4 data-i18n="dashboard.activity">Activity</h4>
+                                            <p data-i18n="dashboard.viewHistory">View history</p>
                                         </div>
                                     </div>
                                 </div>
@@ -2394,17 +2468,17 @@
                     </div>
 
                     <div class="content-header">
-                        <h2 class="content-title">Dashboard</h2>
+                        <h2 class="content-title" data-i18n="navigation.dashboard">Dashboard</h2>
                     </div>
 
                     <!-- Recent Tasks -->
                     <div class="task-section">
-                        <h3>Recent Tasks</h3>
+                        <h3 data-i18n="dashboard.recentTasks">Recent Tasks</h3>
                         <div class="task-filters">
-                            <button class="filter-btn active" onclick="filterTasks('all')">All</button>
-                            <button class="filter-btn" onclick="filterTasks('high')">High Priority</button>
-                            <button class="filter-btn" onclick="filterTasks('today')">Due Today</button>
-                            <button class="filter-btn" onclick="filterTasks('overdue')">Overdue</button>
+                            <button class="filter-btn active" onclick="filterTasks('all')" data-i18n="common.all">All</button>
+                            <button class="filter-btn" onclick="filterTasks('high')" data-i18n="tasks.priorityHigh">High Priority</button>
+                            <button class="filter-btn" onclick="filterTasks('today')" data-i18n="dates.today">Due Today</button>
+                            <button class="filter-btn" onclick="filterTasks('overdue')" data-i18n="tasks.overdue">Overdue</button>
                         </div>
                         <div class="task-grid" id="recentTasksGrid">
                             <!-- Tasks will be loaded here -->
@@ -2415,10 +2489,10 @@
                 <!-- Other sections will be added dynamically -->
                 <div id="tasksSection" class="content-section" style="display: none;">
                     <div class="content-header">
-                        <h2 class="content-title">Task Management</h2>
+                        <h2 class="content-title" data-i18n="tasks.title">Task Management</h2>
                         <button class="add-btn" onclick="showAddTaskModal()">
                             <span>+</span>
-                            <span>New Task</span>
+                            <span data-i18n="tasks.addTask">New Task</span>
                         </button>
                     </div>
                     <div class="task-grid" id="allTasksGrid">
@@ -2444,7 +2518,7 @@
                         <h2 class="content-title">Daily Tasks</h2>
                         <button class="add-btn" onclick="showAddDailyTaskModal()">
                             <span>+</span>
-                            <span>New Daily Task</span>
+                            <span data-i18n="dashboard.newDailyTask">New Daily Task</span>
                         </button>
                     </div>
                     <div id="dailyTasksGrid">
@@ -2454,27 +2528,83 @@
 
                 <div id="profileSection" class="content-section" style="display: none;">
                     <div class="content-header">
-                        <h2 class="content-title">Profile Settings</h2>
-                        <p class="content-subtitle">Manage your personal information and account settings</p>
+                                        <h2 class="content-title" data-i18n="profile.profileSettings">Profile Settings</h2>
+                <p class="content-subtitle" data-i18n="profile.profileSettingsDescription">Manage your personal information and account settings</p>
                     </div>
                     <div id="profileContent">
-                        <!-- Profile form will be loaded here -->
+                        <div class="profile-form">
+                            <div class="form-group">
+                                <label for="profileName" data-i18n="profile.name">Full Name</label>
+                                <input type="text" id="profileName" name="profileName" placeholder="Enter your full name">
+                            </div>
+                            <div class="form-group">
+                                <label for="profileEmail" data-i18n="profile.email">Email</label>
+                                <input type="email" id="profileEmail" name="profileEmail" placeholder="Enter your email">
+                            </div>
+                            <div class="form-group">
+                                <label for="profilePhone" data-i18n="profile.phone">Phone</label>
+                                <input type="tel" id="profilePhone" name="profilePhone" placeholder="Enter your phone number">
+                            </div>
+                            <div class="form-group">
+                                <label for="profileBio" data-i18n="profile.bio">Bio</label>
+                                <textarea id="profileBio" name="profileBio" rows="3" placeholder="Tell us about yourself"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn-primary" onclick="saveProfile()" data-i18n="profile.saveProfile">Save Profile</button>
+                                <button type="button" class="btn-secondary" onclick="resetProfile()" data-i18n="profile.resetProfile">Reset</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div id="preferencesSection" class="content-section" style="display: none;">
                     <div class="content-header">
-                        <h2 class="content-title">Settings</h2>
-                        <p class="content-subtitle">Manage your account preferences and security settings</p>
+                                        <h2 class="content-title" data-i18n="settings.title">Settings</h2>
+                <p class="content-subtitle" data-i18n="settings.description">Manage your account preferences and security settings</p>
                     </div>
                     <div id="preferencesContent">
-                        <!-- Settings content will be loaded here -->
+                        <!-- Language Settings -->
+                        <div class="settings-group">
+                            <h4 data-i18n="settings.languageSettings">Language Settings</h4>
+                            <div class="setting-item">
+                                <label for="languageSelect" data-i18n="settings.selectLanguage">Select Language:</label>
+                                <select id="languageSelect">
+                                    <option value="tr">🇹🇷 Türkçe</option>
+                                    <option value="en">🇺🇸 English</option>
+                                    <option value="de">🇩🇪 Deutsch</option>
+                                    <option value="es">🇪🇸 Español</option>
+                                    <option value="fr">🇫🇷 Français</option>
+                                </select>
+                                <p class="setting-description" data-i18n="settings.languageDescription">Choose your preferred language for the application interface.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Other Settings -->
+                        <div class="settings-group">
+                            <h4 data-i18n="settings.generalSettings">General Settings</h4>
+                            <div class="setting-item">
+                                <label for="themeSelect" data-i18n="settings.theme">Theme:</label>
+                                <select id="themeSelect">
+                                    <option value="dark" data-i18n="settings.darkTheme">Dark Theme</option>
+                                    <option value="light" data-i18n="settings.lightTheme">Light Theme</option>
+                                    <option value="auto" data-i18n="settings.autoTheme">Auto (System)</option>
+                                </select>
+                                <p class="setting-description" data-i18n="settings.themeDescription">Choose your preferred theme for the application.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Save Settings Button -->
+                        <div class="settings-actions">
+                            <button type="button" id="saveAllSettingsBtn" class="btn-primary" onclick="saveAllSettings()">
+                                <span data-i18n="settings.saveAllSettings">Save All Settings</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <div id="activitySection" class="content-section" style="display: none;">
                     <div class="content-header">
-                        <h2 class="content-title">Activity Log</h2>
+                        <h2 class="content-title" data-i18n="activity.activityLog">Activity Log</h2>
                     </div>
                     <div id="activityContent">
                         <!-- Activity log will be loaded here -->
@@ -2489,20 +2619,20 @@
     <div id="addTaskModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Add New Task</h3>
+                <h3 data-i18n="tasks.addTask">Add New Task</h3>
                 <span class="close" onclick="closeModal('addTaskModal')">&times;</span>
             </div>
             <form id="addTaskForm">
                 <div class="form-group">
-                    <label for="taskTitle">Task Title</label>
+                    <label for="taskTitle" data-i18n="tasks.title">Task Title</label>
                     <input type="text" id="taskTitle" name="taskTitle" required>
                 </div>
                                  <div class="form-group">
-                     <label for="taskDescription">Description</label>
+                     <label for="taskDescription" data-i18n="tasks.description">Description</label>
                      <textarea id="taskDescription" name="taskDescription" rows="3"></textarea>
                  </div>
                  <div class="form-group">
-                     <label for="taskType">Task Type</label>
+                     <label for="taskType" data-i18n="tasks.taskType">Task Type</label>
                      <select id="taskType" name="taskType" onchange="toggleTaskDateInputs()">
                          <option value="single">Single Day Task</option>
                          <option value="range">Date Range Task</option>
@@ -2510,13 +2640,13 @@
                  </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="taskProject">Project</label>
+                        <label for="taskProject" data-i18n="tasks.project">Project</label>
                         <select id="taskProject" name="taskProject">
                             <option value="">No Project</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="taskPriority">Priority</label>
+                        <label for="taskPriority" data-i18n="tasks.priority">Priority</label>
                         <select id="taskPriority" name="taskPriority" required>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
@@ -2526,30 +2656,30 @@
                 </div>
                                  <div class="form-row" id="singleDateRow">
                      <div class="form-group">
-                         <label for="taskDueDate">Due Date</label>
+                         <label for="taskDueDate" data-i18n="tasks.dueDate">Due Date</label>
                          <input type="date" id="taskDueDate" name="taskDueDate" placeholder="dd-mm-yyyy" required>
                          <small class="date-format-hint">Format: dd-mm-yyyy</small>
                      </div>
                  </div>
                  <div class="form-row" id="dateRangeRow" style="display: none;">
                      <div class="form-group">
-                         <label for="taskStartDate">Start Date</label>
+                         <label for="taskStartDate" data-i18n="tasks.startDate">Start Date</label>
                          <input type="date" id="taskStartDate" name="taskStartDate" placeholder="dd-mm-yyyy">
                          <small class="date-format-hint">Format: dd-mm-yyyy</small>
                      </div>
                      <div class="form-group">
-                         <label for="taskEndDate">End Date</label>
+                         <label for="taskEndDate" data-i18n="tasks.endDate">End Date</label>
                          <input type="date" id="taskEndDate" name="taskEndDate" placeholder="dd-mm-yyyy" required>
                          <small class="date-format-hint">Format: dd-mm-yyyy</small>
                      </div>
                  </div>
                 <div class="form-group">
-                    <label for="taskLabels">Labels (comma separated)</label>
+                    <label for="taskLabels" data-i18n="tasks.labels">Labels (comma separated)</label>
                     <input type="text" id="taskLabels" name="taskLabels" placeholder="design, urgent, frontend">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Task</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('addTaskModal')" data-i18n="common.cancel">Cancel</button>
+                    <button type="submit" class="btn-primary" data-i18n="tasks.addTask">Add Task</button>
                 </div>
             </form>
         </div>
@@ -2559,25 +2689,25 @@
     <div id="addProjectModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Add New Project</h3>
+                <h3 data-i18n="settings.addNewProject">Add New Project</h3>
                 <span class="close" onclick="closeModal('addProjectModal')">&times;</span>
             </div>
             <form id="addProjectForm">
                 <div class="form-group">
-                    <label for="projectTitle">Project Title</label>
+                    <label for="projectTitle" data-i18n="settings.projectTitle">Project Title</label>
                     <input type="text" id="projectTitle" name="projectTitle" required>
                 </div>
                 <div class="form-group">
-                    <label for="projectDescription">Description</label>
+                    <label for="projectDescription" data-i18n="settings.projectDescription">Description</label>
                     <textarea id="projectDescription" name="projectDescription" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="projectColor">Color</label>
+                    <label for="projectColor" data-i18n="settings.projectColor">Color</label>
                     <input type="color" id="projectColor" name="projectColor" value="#3AA8FF">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addProjectModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Project</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('addProjectModal')" data-i18n="common.cancel">Cancel</button>
+                    <button type="submit" class="btn-primary" data-i18n="settings.addProject">Add Project</button>
                 </div>
             </form>
         </div>
@@ -2616,44 +2746,44 @@
     <div id="addDailyTaskModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Add Daily Task</h3>
+                <h3 data-i18n="settings.addDailyTask">Add Daily Task</h3>
                 <span class="close" onclick="closeModal('addDailyTaskModal')">&times;</span>
             </div>
             <form id="addDailyTaskForm">
                 <div class="form-group">
-                    <label for="dailyTaskTitle">Task Title</label>
+                    <label for="dailyTaskTitle" data-i18n="settings.taskTitle">Task Title</label>
                     <input type="text" id="dailyTaskTitle" name="dailyTaskTitle" required>
                 </div>
                 <div class="form-group">
-                    <label for="dailyTaskDescription">Description</label>
+                    <label for="dailyTaskDescription" data-i18n="settings.taskDescription">Description</label>
                     <textarea id="dailyTaskDescription" name="dailyTaskDescription" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="dailyTaskCategory">Category</label>
-                    <input type="text" id="dailyTaskCategory" name="dailyTaskCategory" placeholder="health, work, personal">
+                    <label for="dailyTaskCategory" data-i18n="settings.taskCategory">Category</label>
+                    <input type="text" id="dailyTaskCategory" name="dailyTaskCategory" data-i18n-placeholder="settings.taskCategoryPlaceholder" placeholder="health, work, personal">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="dailyTaskTime">Time</label>
+                        <label for="dailyTaskTime" data-i18n="settings.taskTime">Time</label>
                         <input type="time" id="dailyTaskTime" name="dailyTaskTime" value="08:00">
                     </div>
                                          <div class="form-group">
-                        <label for="dailyTaskTitle">Days (Hold Ctrl/Cmd to select multiple)</label>
+                        <label for="dailyTaskDays" data-i18n="settings.taskDays">Days (Hold Ctrl/Cmd to select multiple)</label>
                         <select id="dailyTaskDays" name="dailyTaskDays" multiple>
-                            <option value="mon">Monday</option>
-                            <option value="tue">Tuesday</option>
-                            <option value="wed">Wednesday</option>
-                            <option value="thu">Thursday</option>
-                            <option value="fri">Friday</option>
-                            <option value="sat">Saturday</option>
-                            <option value="sun">Sunday</option>
+                            <option value="mon" data-i18n="settings.monday">Monday</option>
+                            <option value="tue" data-i18n="settings.tuesday">Tuesday</option>
+                            <option value="wed" data-i18n="settings.wednesday">Wednesday</option>
+                            <option value="thu" data-i18n="settings.thursday">Thursday</option>
+                            <option value="fri" data-i18n="settings.friday">Friday</option>
+                            <option value="sat" data-i18n="settings.saturday">Saturday</option>
+                            <option value="sun" data-i18n="settings.sunday">Sunday</option>
                         </select>
-                        <small style="color: #b8c5d6; font-size: 12px;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple days</small>
+                        <small style="color: #b8c5d6; font-size: 12px;" data-i18n="settings.taskDaysHint">Hold Ctrl (Windows) or Cmd (Mac) to select multiple days</small>
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addDailyTaskModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Daily Task</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('addDailyTaskModal')" data-i18n="common.cancel">Cancel</button>
+                    <button type="submit" class="btn-primary" data-i18n="settings.addDailyTaskButton">Add Daily Task</button>
                 </div>
             </form>
         </div>
@@ -2844,6 +2974,8 @@
     <!-- Debug Scripts - Commented out to disable debug panel -->
     <!-- <script src="../js/debug.js"></script> -->
 
+    <script src="../js/i18n.js"></script>
+    <script src="../js/language-switcher.js"></script>
     <script src="../js/app.js"></script>
 </body>
 </html>

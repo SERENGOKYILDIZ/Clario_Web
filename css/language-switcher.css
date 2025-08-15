@@ -1,0 +1,125 @@
+/* Language Switcher Styles */
+.language-switcher {
+    position: relative;
+    display: inline-block;
+    z-index: 1000;
+}
+
+.language-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.language-current:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.language-flag {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.language-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.language-arrow {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    transition: transform 0.2s ease;
+}
+
+.language-switcher.open .language-arrow {
+    transform: rotate(180deg);
+}
+
+.language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: rgba(30, 30, 40, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(15px);
+    min-width: 160px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.language-switcher.open .language-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.language-option:last-child {
+    border-bottom: none;
+}
+
+.language-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.language-option.active {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .language-switcher {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+    }
+    
+    .language-dropdown {
+        right: 0;
+        min-width: 140px;
+    }
+    
+    .language-name {
+        font-size: 13px;
+    }
+}
+
+/* Animation for language change */
+.language-change-animation {
+    animation: languageChange 0.3s ease;
+}
+
+@keyframes languageChange {
+    0% {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

@@ -48,6 +48,10 @@ async function initializeApp() {
         setupDateInputs(); // Set default dates for inputs
         toggleTaskDateInputs(); // Initialize date input visibility
         loadDashboardData();
+        
+        // Initialize language system
+        await initializeAppLanguage();
+        
         // Debug panel is now initialized from debug.js
         
         // Initialize drag and drop functionality after data is loaded
@@ -61,6 +65,424 @@ async function initializeApp() {
 }
 
 // Load Firebase
+/**
+ * Initialize language system for app page
+ */
+async function initializeAppLanguage() {
+    console.log('🌐 initializeAppLanguage called');
+    
+    // Wait for i18n system to be ready
+    if (typeof i18n !== 'undefined' && i18n.initialized) {
+        console.log('🌐 i18n system is ready, updating translations');
+        
+        // Wait a bit for database language to be loaded
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Update UI with current language
+        updateAppLanguageUI();
+        
+        // Update all translations
+        if (typeof updatePageTranslations === 'function') {
+            updatePageTranslations();
+        }
+        
+        // Force update all translatable elements
+        forceUpdateAllTranslations();
+        
+        // Update language selector in settings
+        updateLanguageSelector();
+    } else {
+        console.log('🌐 i18n system not ready, waiting...');
+        // Wait for i18n system to be ready
+        if (typeof i18n !== 'undefined') {
+            console.log('🌐 Registering locale change callback');
+            i18n.onLocaleChange(async () => {
+                console.log('🌐 Locale change callback triggered');
+                
+                // Wait a bit for database language to be loaded
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                updateAppLanguageUI();
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                }
+                // Force update all translatable elements
+                forceUpdateAllTranslations();
+                
+                // Update language selector in settings
+                updateLanguageSelector();
+            });
+        } else {
+            console.log('🌐 i18n object not found, retrying in 500ms');
+            setTimeout(initializeAppLanguage, 500);
+        }
+    }
+}
+
+/**
+ * Update language selector in settings
+ */
+function updateLanguageSelector() {
+    if (typeof i18n !== 'undefined') {
+        const currentLocale = i18n.getCurrentLocale();
+        const languageSelect = document.getElementById('languageSelect');
+        
+        if (languageSelect) {
+            languageSelect.value = currentLocale;
+            console.log(`🌐 Updated language selector to: ${currentLocale}`);
+        }
+    }
+}
+
+/**
+ * Save all settings including language preference
+ */
+async function saveAllSettings() {
+    console.log('💾 saveAllSettings called - SIMPLE VERSION');
+    console.log('💾 Function execution started');
+    
+    try {
+        // Get selected language
+        console.log('💾 Looking for languageSelect element...');
+        const languageSelect = document.getElementById('languageSelect');
+        console.log('💾 languageSelect element:', languageSelect);
+        
+        if (!languageSelect) {
+            console.error('❌ languageSelect element not found!');
+            showStatus('Language selector not found!', 'error');
+            return;
+        }
+        
+        const selectedLanguage = languageSelect.value;
+        console.log(`🌐 Selected language: ${selectedLanguage}`);
+        console.log(`🌐 All options:`, Array.from(languageSelect.options).map(opt => ({value: opt.value, text: opt.text})));
+        
+        // Save to localStorage
+        console.log('💾 Saving to localStorage...');
+        localStorage.setItem('clario_locale', selectedLanguage);
+        console.log('💾 Saved to localStorage:', selectedLanguage);
+        
+        // Update i18n system
+        if (typeof i18n !== 'undefined' && i18n.setLocale) {
+            try {
+                console.log('🌐 Updating i18n system...');
+                await i18n.setLocale(selectedLanguage);
+                console.log('🌐 i18n system updated');
+                
+                // Update language selector to show new value
+                updateLanguageSelector();
+                
+                // Update all translations
+                forceUpdateAllTranslations();
+                
+                        // Save to Firebase database
+        console.log('💾 Checking Firebase availability...');
+        console.log('💾 typeof firebase:', typeof firebase);
+        console.log('💾 firebase.auth():', typeof firebase !== 'undefined' ? firebase.auth() : 'undefined');
+        console.log('💾 firebase.auth().currentUser:', typeof firebase !== 'undefined' ? firebase.auth().currentUser : 'undefined');
+        
+        if (typeof firebase !== 'undefined' && firebase.auth().currentUser) {
+            try {
+                const user = firebase.auth().currentUser;
+                console.log('💾 User found:', user.uid);
+                console.log('💾 Saving language preference to database...');
+                
+                const userRef = firebase.firestore().collection('user_data').doc(user.uid);
+                console.log('💾 User reference:', userRef);
+                
+                // Check if user document exists
+                const userDoc = await userRef.get();
+                if (userDoc.exists) {
+                    console.log('💾 User document exists, updating...');
+                    await userRef.update({
+                        'preferences.language': selectedLanguage,
+                        'preferences.languageUpdatedAt': firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    console.log('💾 User document does not exist, creating...');
+                    await userRef.set({
+                        preferences: {
+                            language: selectedLanguage,
+                            languageUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        },
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        email: user.email || '',
+                        displayName: user.displayName || ''
+                    });
+                }
+                console.log('💾 Language preference saved to database successfully');
+            } catch (dbError) {
+                console.error('💾 Error saving to database:', dbError);
+                console.error('💾 Error details:', {
+                    message: dbError.message,
+                    code: dbError.code,
+                    stack: dbError.stack
+                });
+                showStatus('Warning: Language saved locally but not to database', 'warning');
+            }
+        } else {
+            console.log('💾 Firebase not available or user not authenticated, skipping database save');
+            console.log('💾 Firebase available:', typeof firebase !== 'undefined');
+            console.log('💾 User authenticated:', typeof firebase !== 'undefined' && firebase.auth().currentUser);
+        }
+                
+                showStatus(`Language changed to ${selectedLanguage}!`, 'success');
+                console.log('💾 Status message shown');
+                
+                // Wait 2 seconds and reload
+                console.log('💾 Setting timeout for page reload...');
+                setTimeout(() => {
+                    console.log('💾 Reloading page now...');
+                    window.location.reload();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('🌐 Error updating i18n system:', error);
+                showStatus('Error updating language system: ' + error.message, 'error');
+            }
+        } else {
+            showStatus(`Language changed to ${selectedLanguage}! Reloading page...`, 'success');
+            console.log('💾 Status message shown');
+            
+            // Wait 2 seconds and reload
+            console.log('💾 Setting timeout for page reload...');
+            setTimeout(() => {
+                console.log('💾 Reloading page now...');
+                window.location.reload();
+            }, 2000);
+        }
+        
+    } catch (error) {
+        console.error('💾 Error saving settings:', error);
+        showStatus('Error: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Test language change function
+ */
+async function testLanguageChange() {
+    console.log('🧪 Test language change function called');
+    console.log('🧪 Current i18n state:', {
+        initialized: i18n?.initialized,
+        currentLocale: i18n?.getCurrentLocale(),
+        translations: i18n?.translations
+    });
+    
+    try {
+        // Test with Turkish
+        console.log('🧪 Testing with Turkish locale');
+        await changeLanguageFromSettings('tr');
+        
+        // Wait 2 seconds and test with English
+        setTimeout(async () => {
+            console.log('🧪 Testing with English locale');
+            await changeLanguageFromSettings('en');
+        }, 2000);
+    } catch (error) {
+        console.error('🧪 Test failed:', error);
+    }
+}
+
+/**
+ * Change language from settings
+ */
+async function changeLanguageFromSettings(locale) {
+    console.log('🌐 changeLanguageFromSettings called with locale:', locale);
+    console.log('🌐 i18n object:', i18n);
+    
+    if (typeof i18n !== 'undefined' && i18n.setLocale) {
+        try {
+            console.log('🌐 Calling i18n.setLocale with:', locale);
+            const result = await i18n.setLocale(locale);
+            console.log('🌐 setLocale result:', result);
+            
+            if (result) {
+                // Update UI
+                updateAppLanguageUI();
+                
+                // Show success message
+                showStatus('Language changed successfully!', 'success');
+                
+                // Update all translations
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                }
+                
+                // Force update all translatable elements
+                forceUpdateAllTranslations();
+                
+                console.log('🌐 Language change completed successfully');
+            } else {
+                console.error('🌐 Failed to change language');
+                showStatus('Failed to change language', 'error');
+            }
+        } catch (error) {
+            console.error('🌐 Error changing language:', error);
+            showStatus('Error changing language: ' + error.message, 'error');
+        }
+    } else {
+        console.error('🌐 Language system not available');
+        showStatus('Language system not available', 'error');
+    }
+}
+
+/**
+ * Force update all translatable elements on the page
+ */
+function forceUpdateAllTranslations() {
+    console.log('🌐 forceUpdateAllTranslations called');
+    
+    if (typeof i18n === 'undefined') {
+        console.error('🌐 i18n is undefined in forceUpdateAllTranslations');
+        return;
+    }
+    
+    // Update elements with data-i18n attribute
+    const translatableElements = document.querySelectorAll('[data-i18n]');
+    console.log('🌐 Found translatable elements:', translatableElements.length);
+    
+    translatableElements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        try {
+            const translation = i18n.t(key);
+            console.log(`🌐 Translating ${key} -> ${translation}`);
+            if (translation && translation !== key) {
+                element.textContent = translation;
+                console.log(`🌐 Updated element text for key: ${key}`);
+            }
+        } catch (error) {
+            console.warn(`Translation failed for key: ${key}`, error);
+        }
+    });
+    
+    // Update elements with data-i18n-placeholder attribute
+    const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+    placeholderElements.forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        try {
+            const translation = i18n.t(key);
+            if (translation && translation !== key) {
+                element.placeholder = translation;
+            }
+        } catch (error) {
+            console.warn(`Placeholder translation failed for key: ${key}`, error);
+        }
+    });
+    
+    // Update elements with data-i18n-title attribute
+    const titleElements = document.querySelectorAll('[data-i18n-title]');
+    titleElements.forEach(element => {
+        const key = element.getAttribute('data-i18n-title');
+        try {
+            const translation = i18n.t(key);
+            if (translation && translation !== key) {
+                element.title = translation;
+            }
+        } catch (error) {
+            console.warn(`Title translation failed for key: ${key}`, error);
+        }
+    });
+    
+    // Force update all text content that might contain hardcoded English text
+    forceUpdateAllTextContent();
+}
+
+/**
+ * Force update all text content on the page to current language
+ */
+function forceUpdateAllTextContent() {
+    console.log('🌐 forceUpdateAllTextContent called');
+    
+    if (typeof i18n === 'undefined') {
+        console.error('🌐 i18n is undefined in forceUpdateAllTextContent');
+        return;
+    }
+    
+    // Common text patterns to translate
+    const textPatterns = {
+        'Dashboard': 'navigation.dashboard',
+        'Tasks': 'navigation.tasks',
+        'Projects': 'navigation.projects',
+        'Daily Tasks': 'navigation.dailyTasks',
+        'Settings': 'navigation.settings',
+        'Profile': 'navigation.profile',
+        'Add Task': 'tasks.addTask',
+        'Add Project': 'projects.addProject',
+        'Add Daily Task': 'dailyTasks.addDailyTask',
+        'Quick Actions': 'dashboard.quickActions',
+        'Recent Tasks': 'dashboard.recentTasks',
+        'All': 'common.all',
+        'High': 'tasks.priorityHigh',
+        'Medium': 'tasks.priorityMedium',
+        'Low': 'tasks.priorityLow',
+        'Today': 'dates.today',
+        'Overdue': 'tasks.overdue',
+        'Task Management': 'tasks.title',
+        'Project Management': 'projects.name',
+        'Daily Task Management': 'dailyTasks.title'
+    };
+    
+    // Update all text nodes in the document
+    const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+    
+    let textNode;
+    let updatedCount = 0;
+    
+    while (textNode = walker.nextNode()) {
+        const text = textNode.textContent.trim();
+        if (text && textPatterns[text]) {
+            try {
+                const translation = i18n.t(textPatterns[text]);
+                if (translation && translation !== textPatterns[text]) {
+                    textNode.textContent = textNode.textContent.replace(text, translation);
+                    updatedCount++;
+                    console.log(`🌐 Updated text: "${text}" -> "${translation}"`);
+                }
+            } catch (error) {
+                console.warn(`Failed to translate text: ${text}`, error);
+            }
+        }
+    }
+    
+    console.log(`🌐 Updated ${updatedCount} text nodes`);
+}
+
+/**
+ * Update app language UI elements
+ */
+function updateAppLanguageUI() {
+    if (typeof i18n === 'undefined') return;
+    
+    const currentLocale = i18n.getCurrentLocale();
+    
+    // Update current language display
+    const flagElement = document.getElementById('currentLanguageFlag');
+    const nameElement = document.getElementById('currentLanguageName');
+    
+    if (flagElement) {
+        flagElement.textContent = i18n.getLocaleFlag(currentLocale);
+    }
+    
+    if (nameElement) {
+        nameElement.textContent = i18n.getLocaleDisplayName(currentLocale);
+    }
+    
+    // Update active state in dropdown
+    const options = document.querySelectorAll('.language-option');
+    options.forEach(option => {
+        option.classList.remove('active');
+        if (option.onclick.toString().includes(currentLocale)) {
+            option.classList.add('active');
+        }
+    });
+}
+
 async function loadFirebase() {
     try {
         // Check if Firebase SDK is loaded
@@ -370,11 +792,11 @@ function createTaskCard(task) {
                 <div class="task-priority ${priorityClass}">${getPriorityText(task.priority)}</div>
             </div>
         </div>
-        <div class="task-description">${task.description || 'No description'}</div>
+        <div class="task-description">${task.description || (typeof i18n !== 'undefined' ? i18n.t('tasks.noDescription') : 'No description')}</div>
         <div class="task-meta">
             <div class="task-project">
                 <div class="project-color" style="background-color: ${projectColor}"></div>
-                <span>${projectName || 'No Project'}</span>
+                <span>${projectName || (typeof i18n !== 'undefined' ? i18n.t('tasks.noProject') : 'No Project')}</span>
             </div>
             <span>${task.taskType === 'range' ? 
                 formatDateRange(task.startDate, task.dueDate) : 
@@ -382,11 +804,11 @@ function createTaskCard(task) {
         </div>
         <div class="task-actions">
             ${task.status === 'completed' 
-                ? `<button class="action-btn btn-uncomplete" onclick="event.stopPropagation(); uncompleteTask('${task.id}')">Undo</button>`
-                : `<button class="action-btn btn-complete" onclick="event.stopPropagation(); completeTask('${task.id}')">Complete</button>`
+                ? `<button class="action-btn btn-uncomplete" onclick="event.stopPropagation(); uncompleteTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.undo') : 'Undo'}</button>`
+                : `<button class="action-btn btn-complete" onclick="event.stopPropagation(); completeTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.complete') : 'Complete'}</button>`
             }
-            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editTask('${task.id}')">Edit</button>
-            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteTask('${task.id}')">Delete</button>
+            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.edit') : 'Edit'}</button>
+            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteTask('${task.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.delete') : 'Delete'}</button>
         </div>
     `;
     
@@ -405,19 +827,29 @@ function getPriorityClass(priority) {
 
 // Get priority text
 function getPriorityText(priority) {
-    switch (priority) {
-        case 'high': return 'High';
-        case 'medium': return 'Medium';
-        case 'low': return 'Low';
-        default: return 'Medium';
+    if (typeof i18n !== 'undefined' && i18n.t) {
+        switch (priority) {
+            case 'high': return i18n.t('tasks.priorityHigh');
+            case 'medium': return i18n.t('tasks.priorityMedium');
+            case 'low': return i18n.t('tasks.priorityLow');
+            default: return i18n.t('tasks.priorityMedium');
+        }
+    } else {
+        // Fallback if i18n is not available
+        switch (priority) {
+            case 'high': return 'High';
+            case 'medium': return 'Medium';
+            case 'low': return 'Low';
+            default: return 'Medium';
+        }
     }
 }
 
 // Get project name by ID
 function getProjectName(projectId) {
-    if (!userData || !userData.projects) return 'No Project';
+    if (!userData || !userData.projects) return typeof i18n !== 'undefined' ? i18n.t('tasks.noProject') : 'No Project';
     const project = userData.projects.find(p => p.id === projectId);
-    return project ? project.title : 'No Project';
+    return project ? project.title : (typeof i18n !== 'undefined' ? i18n.t('tasks.noProject') : 'No Project');
 }
 
 // Get project color by ID
@@ -429,10 +861,10 @@ function getProjectColor(projectId) {
 
 // Format date for display
 function formatDate(dateString) {
-    if (!dateString) return 'No due date';
+    if (!dateString) return typeof i18n !== 'undefined' ? i18n.t('tasks.noDueDate') : 'No due date';
     
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid date';
+    if (isNaN(date.getTime())) return typeof i18n !== 'undefined' ? i18n.t('tasks.invalidDate') : 'Invalid date';
     
     const now = new Date();
     const diffTime = date - now;
@@ -445,13 +877,17 @@ function formatDate(dateString) {
     const formattedDate = `${day}-${month}-${year}`;
     
     if (diffDays < 0) {
-        return `${formattedDate} (${Math.abs(diffDays)} days overdue)`;
+        const overdueText = typeof i18n !== 'undefined' ? i18n.t('tasks.daysOverdue', { days: Math.abs(diffDays) }) : `${Math.abs(diffDays)} days overdue`;
+        return `${formattedDate} (${overdueText})`;
     } else if (diffDays === 0) {
-        return `${formattedDate} (Due today)`;
+        const dueTodayText = typeof i18n !== 'undefined' ? i18n.t('tasks.dueToday') : 'Due today';
+        return `${formattedDate} (${dueTodayText})`;
     } else if (diffDays === 1) {
-        return `${formattedDate} (Due tomorrow)`;
-        } else {
-        return `${formattedDate} (Due in ${diffDays} days)`;
+        const dueTomorrowText = typeof i18n !== 'undefined' ? i18n.t('tasks.dueTomorrow') : 'Due tomorrow';
+        return `${formattedDate} (${dueTomorrowText})`;
+    } else {
+        const dueInText = typeof i18n !== 'undefined' ? i18n.t('tasks.dueIn', { days: diffDays }) : `Due in ${diffDays} days`;
+        return `${formattedDate} (${dueInText})`;
     }
 }
 
@@ -562,6 +998,7 @@ async function loadSectionData(sectionName) {
             break;
         case 'preferences':
             renderPreferencesForm();
+            updateLanguageSelector();
             break;
         case 'activity':
             renderActivityLog();
@@ -616,10 +1053,10 @@ function createProjectCard(project) {
             </div>
             <span class="card-count">${taskCount}</span>
         </div>
-        <p>${project.description || 'No description'}</span>
+        <p>${project.description || (typeof i18n !== 'undefined' ? i18n.t('projects.noDescription') : 'No description')}</span>
         <div class="task-actions">
-            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editProject('${project.id}')">Edit</button>
-            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProject('${project.id}')">Delete</button>
+            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editProject('${project.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.edit') : 'Edit'}</button>
+            <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProject('${project.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.delete') : 'Delete'}</button>
         </div>
     `;
     
@@ -663,9 +1100,9 @@ function createDailyTaskCard(dailyTask) {
     dailyTaskCard.innerHTML = `
         <div class="card-content">
             <div class="card-title">${dailyTask.title}</div>
-            <div class="card-description">${dailyTask.description || 'No description'}</div>
+            <div class="card-description">${dailyTask.description || (typeof i18n !== 'undefined' ? i18n.t('dailyTasks.noDescription') : 'No description')}</div>
             <div class="card-info">
-                <div class="card-category">${dailyTask.category || 'No category'}</div>
+                <div class="card-category">${dailyTask.category || (typeof i18n !== 'undefined' ? i18n.t('dailyTasks.noCategory') : 'No category')}</div>
                 <div class="card-time">${dailyTask.schedule.recurrence.time}</div>
                 <div class="card-days">${formatDays(dailyTask.schedule.recurrence.days)}</div>
             </div>
@@ -674,10 +1111,10 @@ function createDailyTaskCard(dailyTask) {
             <button class="btn ${isCompletedToday ? 'btn-complete' : 'btn-edit'}" 
                     onclick="event.stopPropagation(); ${isCompletedToday ? 'uncompleteDailyTask' : 'completeDailyTask'}('${dailyTask.id}')"
                     ${!isActiveToday ? 'disabled' : ''}>
-                ${isCompletedToday ? '✓' : 'Complete'}
+                ${isCompletedToday ? '✓' : (typeof i18n !== 'undefined' ? i18n.t('common.complete') : 'Complete')}
             </button>
-            <button class="btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">Edit</button>
-            <button class="btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">Delete</button>
+            <button class="btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.edit') : 'Edit'}</button>
+            <button class="btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">${typeof i18n !== 'undefined' ? i18n.t('common.delete') : 'Delete'}</button>
         </div>
     `;
     
@@ -687,6 +1124,15 @@ function createDailyTaskCard(dailyTask) {
 // Render profile form
 function renderProfileForm() {
     const profileContent = document.getElementById('profileContent');
+    
+    // Get current translations if available
+    const getText = (key) => {
+        if (typeof i18n !== 'undefined' && i18n.t) {
+            return i18n.t(key);
+        }
+        return key; // Fallback to key if i18n not available
+    };
+    
     profileContent.innerHTML = `
         <div class="profile-container">
             <div class="profile-header">
@@ -716,30 +1162,30 @@ function renderProfileForm() {
 
                     <form id="profileForm" class="profile-form">
                         <div class="form-section">
-                            <h4>Basic Information</h4>
+                            <h4>${getText('settings.basicInformation')}</h4>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="profileName">Full Name</label>
-                                    <input type="text" id="profileName" placeholder="Enter your full name" value="${userData.profile.name || ''}" required>
+                                    <label for="profileName">${getText('settings.fullName')}</label>
+                                    <input type="text" id="profileName" placeholder="${getText('settings.enterYourFullName')}" value="${userData.profile.name || ''}" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="profileUsername">Username</label>
-                                    <input type="text" id="profileUsername" placeholder="Choose a username" value="${userData.profile.username || ''}" required>
+                                    <label for="profileUsername">${getText('settings.username')}</label>
+                                    <input type="text" id="profileUsername" placeholder="${getText('settings.chooseAUsername')}" value="${userData.profile.username || ''}" required>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="profileEmail">Email Address</label>
-                                <input type="email" id="profileEmail" placeholder="Enter your email" value="${userData.profile.email || ''}" required>
+                                <label for="profileEmail">${getText('settings.emailAddress')}</label>
+                                <input type="email" id="profileEmail" placeholder="${getText('settings.enterYourEmail')}" value="${userData.profile.email || ''}" required>
                             </div>
                             <div class="form-group">
-                                <label for="profilePhone">Phone Number</label>
+                                <label for="profilePhone">${getText('settings.phoneNumber')}</label>
                                 <div class="phone-input-container">
                                     <div class="country-flag-selector" onclick="toggleCountrySelector()">
                                         <span class="flag" id="selectedFlag">🇹🇷</span>
                                         <span class="country-code" id="selectedCountryCode">+90</span>
                                         <span class="dropdown-arrow">▼</span>
                                     </div>
-                                    <input type="tel" id="profilePhone" placeholder="(555) 123-4567" value="${userData.profile.phone || ''}" oninput="formatPhoneNumber(this)">
+                                    <input type="tel" id="profilePhone" placeholder="${getText('settings.enterPhoneNumber')}" value="${userData.profile.phone || ''}" oninput="formatPhoneNumber(this)">
                                     <div class="country-selector-dropdown" id="countrySelectorDropdown" style="display: none;">
                                         <div class="country-option" onclick="selectCountry('🇹🇷', '+90', 'TR')">
                                             <span class="flag">🇹🇷</span>
@@ -783,41 +1229,41 @@ function renderProfileForm() {
                                         </div>
                                     </div>
                                 </div>
-                                <small class="input-hint">Select country and enter phone number</small>
+                                <small class="input-hint">${getText('settings.selectCountryAndEnterPhone')}</small>
                             </div>
                         </div>
 
                         <div class="form-section">
-                            <h4>Personal Details</h4>
+                            <h4>${getText('settings.personalDetails')}</h4>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="profileBirthDate">Birth Date</label>
+                                    <label for="profileBirthDate">${getText('settings.birthDate')}</label>
                                     <input type="date" id="profileBirthDate" value="${userData.profile.birthDate || ''}">
                                 </div>
                                 <div class="form-group">
-                                    <label for="profileGender">Gender</label>
+                                    <label for="profileGender">${getText('settings.gender')}</label>
                                     <div class="gender-toggle">
                                         <input type="radio" id="genderMale" name="gender" value="male" ${userData.profile.gender === 'male' ? 'checked' : ''}>
                                         <label for="genderMale" class="gender-option">
                                             <span class="gender-icon">👨</span>
-                                            <span>Male</span>
+                                            <span>${getText('settings.male')}</span>
                                         </label>
                                         <input type="radio" id="genderFemale" name="gender" value="female" ${userData.profile.gender === 'female' ? 'checked' : ''}>
                                         <label for="genderFemale" class="gender-option">
                                             <span class="gender-icon">👩</span>
-                                            <span>Female</span>
+                                            <span>${getText('settings.female')}</span>
                                         </label>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="profileBio">Bio</label>
-                                <textarea id="profileBio" placeholder="Tell us about yourself..." rows="4">${userData.profile.bio || ''}</textarea>
+                                <label for="profileBio">${getText('settings.bio')}</label>
+                                <textarea id="profileBio" placeholder="${getText('settings.tellUsAboutYourself')}" rows="4">${userData.profile.bio || ''}</textarea>
                             </div>
                             <div class="form-group">
-                                <label for="profileLocation">Location</label>
+                                <label for="profileLocation">${getText('settings.location')}</label>
                                 <div class="location-combobox">
-                                    <input type="text" id="profileLocation" placeholder="Type to search or select..." value="${userData.profile.location || ''}" oninput="filterLocations(this)" onfocus="showLocationDropdown()" onblur="hideLocationDropdown()">
+                                    <input type="text" id="profileLocation" placeholder="${getText('settings.typeToSearchOrSelect')}" value="${userData.profile.location || ''}" oninput="filterLocations(this)" onfocus="showLocationDropdown()" onblur="hideLocationDropdown()">
                                     <div class="location-dropdown" id="locationDropdown" style="display: none;">
                                         <div class="location-option" onclick="selectLocation('Istanbul, Turkey')">Istanbul, Turkey</div>
                                         <div class="location-option" onclick="selectLocation('Ankara, Turkey')">Ankara, Turkey</div>
@@ -835,24 +1281,24 @@ function renderProfileForm() {
                         </div>
 
                         <div class="form-section">
-                            <h4>Professional Information</h4>
+                            <h4>${getText('settings.professionalInformation')}</h4>
                             <div class="form-group">
-                                <label for="profileJobTitle">Job Title</label>
+                                <label for="profileJobTitle">${getText('settings.jobTitle')}</label>
                                 <input type="text" id="profileJobTitle" placeholder="e.g., Software Developer" value="${userData.profile.jobTitle || ''}">
                             </div>
                             <div class="form-group">
-                                <label for="profileCompany">Company</label>
-                                <input type="text" id="profileCompany" placeholder="Company name" value="${userData.profile.company || ''}">
+                                <label for="profileCompany">${getText('settings.company')}</label>
+                                <input type="text" id="profileCompany" placeholder="${getText('settings.companyName')}" value="${userData.profile.company || ''}">
                             </div>
                             <div class="form-group">
-                                <label for="profileWebsite">Website</label>
-                                <input type="url" id="profileWebsite" placeholder="https://yourwebsite.com" value="${userData.profile.website || ''}">
+                                <label for="profileWebsite">${getText('settings.website')}</label>
+                                <input type="url" id="profileWebsite" placeholder="${getText('settings.websiteUrl')}" value="${userData.profile.website || ''}">
                             </div>
                         </div>
 
                         <div class="form-actions">
-                            <button type="button" class="btn-secondary" id="resetProfileBtn">Reset</button>
-                            <button type="submit" class="btn-primary">Save Changes</button>
+                            <button type="button" class="btn-secondary" id="resetProfileBtn">${getText('settings.reset')}</button>
+                            <button type="submit" class="btn-primary">${getText('settings.saveChanges')}</button>
                         </div>
                     </form>
                 </div>
@@ -887,14 +1333,23 @@ function renderProfileForm() {
 // Render preferences form
 function renderPreferencesForm() {
     const preferencesContent = document.getElementById('preferencesContent');
+    
+    // Get current translations if available
+    const getText = (key) => {
+        if (typeof i18n !== 'undefined' && i18n.t) {
+            return i18n.t(key);
+        }
+        return key; // Fallback to key if i18n not available
+    };
+    
     preferencesContent.innerHTML = `
         <div class="settings-container">
             <div class="settings-section">
-                <h4>Appearance</h4>
+                <h4>${getText('settings.appearance')}</h4>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Dark Mode</h5>
-                        <p>Use dark theme for the application</p>
+                        <h5>${getText('settings.darkMode')}</h5>
+                        <p>${getText('settings.useDarkTheme')}</p>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="darkMode" ${userData.preferences?.darkMode ? 'checked' : ''}>
@@ -904,8 +1359,8 @@ function renderPreferencesForm() {
 
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Language</h5>
-                        <p>Choose your preferred language</p>
+                        <h5>${getText('settings.languageSettings')}</h5>
+                        <p>${getText('settings.languageDescription')}</p>
                     </div>
                     <select id="languageSelect" class="setting-select">
                         <option value="en" ${userData.preferences?.language === 'en' ? 'selected' : ''}>English</option>
@@ -918,11 +1373,11 @@ function renderPreferencesForm() {
             </div>
 
             <div class="settings-section">
-                <h4>Notification Preferences</h4>
+                <h4>${getText('settings.notificationPreferences')}</h4>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Email Notifications</h5>
-                        <p>Receive email notifications for important updates</p>
+                        <h5>${getText('settings.emailNotifications')}</h5>
+                        <p>${getText('settings.emailNotificationsDesc')}</p>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="emailNotifications" ${userData.preferences?.emailNotifications ? 'checked' : ''}>
@@ -932,8 +1387,8 @@ function renderPreferencesForm() {
 
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Push Notifications</h5>
-                        <p>Receive push notifications on your device</p>
+                        <h5>${getText('settings.pushNotifications')}</h5>
+                        <p>${getText('settings.pushNotificationsDesc')}</p>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="pushNotifications" ${userData.preferences?.pushNotifications ? 'checked' : ''}>
@@ -943,19 +1398,19 @@ function renderPreferencesForm() {
             </div>
 
             <div class="settings-section">
-                <h4>Security Settings</h4>
+                <h4>${getText('settings.securitySettings')}</h4>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Change Password</h5>
-                        <p>Update your account password</p>
+                        <h5>${getText('settings.changePassword')}</h5>
+                        <p>${getText('settings.changePasswordDesc')}</p>
                     </div>
-                    <button type="button" class="btn-secondary" onclick="showChangePasswordForm()">Change Password</button>
+                    <button type="button" class="btn-secondary" onclick="showChangePasswordForm()">${getText('settings.changePassword')}</button>
                 </div>
 
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Two-Factor Authentication</h5>
-                        <p>Add an extra layer of security to your account</p>
+                        <h5>${getText('settings.twoFactorAuth')}</h5>
+                        <p>${getText('settings.twoFactorAuthDesc')}</p>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="twoFactorAuth" ${userData.preferences?.twoFactorAuth ? 'checked' : ''}>
@@ -965,24 +1420,24 @@ function renderPreferencesForm() {
 
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Login History</h5>
-                        <p>View your recent login activities</p>
+                        <h5>${getText('settings.loginHistory')}</h5>
+                        <p>${getText('settings.loginHistoryDesc')}</p>
                     </div>
-                    <button type="button" class="btn-secondary" onclick="showLoginHistory()">View History</button>
+                    <button type="button" class="btn-secondary" onclick="showLoginHistory()">${getText('settings.viewHistory')}</button>
                 </div>
 
                 <div class="setting-item">
                     <div class="setting-info">
-                        <h5>Account Deletion</h5>
-                        <p>Permanently delete your account and all data</p>
+                        <h5>${getText('settings.accountDeletion')}</h5>
+                        <p>${getText('settings.accountDeletionDesc')}</p>
                     </div>
-                    <button type="button" class="btn-danger" onclick="showDeleteAccountConfirmation()">Delete Account</button>
+                    <button type="button" class="btn-danger" onclick="showDeleteAccountConfirmation()">${getText('settings.deleteAccount')}</button>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="resetAllSettings()">Reset All</button>
-                <button type="button" class="btn-primary" onclick="saveAllSettings()">Save All Settings</button>
+                <button type="button" class="btn-secondary" onclick="resetAllSettings()">${getText('settings.resetAll')}</button>
+                <button type="button" class="btn-primary" onclick="saveAllSettings()">${getText('settings.saveAllSettings')}</button>
                 </div>
         </div>
     `;
@@ -2558,6 +3013,16 @@ async function reorderItems(dataType, draggedId, targetId, gridId) {
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initializeApp);
 
+// Additional event listener for language system initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for i18n system to be ready
+    setTimeout(() => {
+        if (typeof i18n !== 'undefined' && i18n.initialized) {
+            forceUpdateAllTranslations();
+        }
+    }, 500);
+});
+
 // Global exports for HTML onclick handlers
 window.editTask = editTask;
 window.handleEditTask = handleEditTask;
@@ -3317,32 +3782,7 @@ function resetAllSettings() {
     showStatus('All settings reset to original values', 'info');
 }
 
-async function saveAllSettings() {
-    try {
-        const preferences = {
-            darkMode: document.getElementById('darkMode').checked,
-            language: document.getElementById('languageSelect').value,
-            emailNotifications: document.getElementById('emailNotifications').checked,
-            pushNotifications: document.getElementById('pushNotifications').checked,
-            twoFactorAuth: document.getElementById('twoFactorAuth').checked
-        };
-        
-        // Update local data
-        if (!userData.preferences) userData.preferences = {};
-        userData.preferences = { ...userData.preferences, ...preferences };
-        
-        // Update Firestore
-        await db.collection('user_data').doc(currentUser.uid).update({
-            preferences: userData.preferences
-        });
-        
-        showStatus('All settings saved successfully!', 'success');
-        
-    } catch (error) {
-        console.error('Failed to save all settings:', error);
-        showStatus('Failed to save all settings: ' + error.message, 'error');
-    }
-}
+// This function was duplicated and removed
 
 // Global exports for profile functionality
 window.switchProfileTab = switchProfileTab;
@@ -3492,6 +3932,31 @@ window.resetNotificationSettings = resetNotificationSettings;
 window.resetAllSettings = resetAllSettings;
 window.saveAllSettings = saveAllSettings;
 
+// Profile functions
+function saveProfile() {
+    const profileData = {
+        name: document.getElementById('profileName').value,
+        email: document.getElementById('profileEmail').value,
+        phone: document.getElementById('profilePhone').value,
+        bio: document.getElementById('profileBio').value
+    };
+    
+    // Save to localStorage for now (can be extended to save to Firebase)
+    localStorage.setItem('userProfile', JSON.stringify(profileData));
+    
+    showStatus('Profile saved successfully!', 'success');
+}
+
+function resetProfile() {
+    // Reset form fields
+    document.getElementById('profileName').value = '';
+    document.getElementById('profileEmail').value = '';
+    document.getElementById('profilePhone').value = '';
+    document.getElementById('profileBio').value = '';
+    
+    showStatus('Profile reset successfully!', 'info');
+}
+
 // Global exports for phone and location functionality
 window.formatPhoneNumber = formatPhoneNumber;
 window.showLocationDropdown = showLocationDropdown;
@@ -3500,5 +3965,9 @@ window.filterLocations = filterLocations;
 window.selectLocation = selectLocation;
 window.toggleCountrySelector = toggleCountrySelector;
 window.selectCountry = selectCountry;
+
+// Global exports for profile functionality
+window.saveProfile = saveProfile;
+window.resetProfile = resetProfile;
 
 

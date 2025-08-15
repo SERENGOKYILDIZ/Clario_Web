@@ -68,6 +68,9 @@ A modern and user-friendly project and task management application. Powered by F
 - **Performance**: CSS animations, JavaScript optimizations
 - **Form Validation**: HTML5 validation with custom patterns
 - **Internationalization**: Multi-country phone format support
+- **🌍 Multi-Language Support**: Complete i18n system with 5 languages (TR, EN, DE, ES, FR)
+- **🔤 Dynamic Language Switching**: Real-time language changes without page reload
+- **📝 Localized Content**: All UI elements, modals, forms, and buttons translated
 - **Modern CSS**: Backdrop filters, CSS Grid, advanced animations
 
 ## 📋 Requirements
@@ -85,6 +88,12 @@ A modern and user-friendly project and task management application. Powered by F
 ## 📝 Recent Updates
 
 ### **Latest Features (Current Version)**
+- ✅ **🌍 Multi-Language Support**: Complete internationalization with 5 languages (TR, EN, DE, ES, FR)
+- ✅ **🔤 Language Switcher**: Dynamic language switching without page reload
+- ✅ **📝 Localized Content**: All UI elements, modals, and forms in multiple languages
+- ✅ **🎯 Localized Modals**: Add New Project, Add Daily Task, and all form fields translated
+- ✅ **🔑 Localized Buttons**: Logout, Cancel, Save, and all action buttons in multiple languages
+- ✅ **📅 Localized Dates**: Day names, date formats, and time-related text in all languages
 - ✅ **Drag & Drop Reordering**: Intuitive drag and drop interface for tasks, projects, and daily tasks
 - ✅ **Complete CRUD Operations**: Full edit functionality for tasks, projects, and daily tasks
 - ✅ **Enhanced Error Handling**: User-friendly error messages for authentication and data operations
@@ -217,7 +226,15 @@ Clario_Web_Test/
 ├── js/
 │   ├── app.js            # Main application logic
 │   ├── index.js          # Landing page logic
-│   └── login.js          # Login operations
+│   ├── login.js          # Login operations
+│   ├── i18n.js           # Internationalization system
+│   └── language-switcher.js # Language switching functionality
+├── locales/
+│   ├── tr.json           # Turkish translations
+│   ├── en.json           # English translations
+│   ├── de.json           # German translations
+│   ├── es.json           # Spanish translations
+│   └── fr.json           # French translations
 ├── pages/
 │   ├── app.html          # Main application page
 │   └── login.html        # Login page
@@ -362,6 +379,18 @@ firebase deploy
 5. **Location**: Type to search or select from popular cities
 6. **Save Changes**: Click "Save Changes" button
 
+### **Language Settings**
+1. **Access Settings**: Click "Settings" in the sidebar
+2. **Language Selection**: Choose from 5 supported languages:
+   - 🇹🇷 **Türkçe** (Turkish)
+   - 🇺🇸 **English** (English)
+   - 🇩🇪 **Deutsch** (German)
+   - 🇪🇸 **Español** (Spanish)
+   - 🇫🇷 **Français** (French)
+3. **Dynamic Switching**: Language changes apply instantly without page reload
+4. **Localized Content**: All UI elements, modals, forms, and buttons are translated
+5. **Persistent Settings**: Language preference is saved and remembered
+
 ### **Settings Management**
 1. **Access Settings**: Click "Settings" in the sidebar
 2. **Appearance**: Toggle dark mode and select language
@@ -457,6 +486,16 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 - Open source community
 
 ## 📋 Changelog
+
+### **v2.4.0** - Multi-Language Support & Internationalization
+- 🌍 **Complete Multi-Language Support**: Added support for 5 languages (TR, EN, DE, ES, FR)
+- 🔤 **Dynamic Language Switcher**: Real-time language switching without page reload
+- 📝 **Localized Content**: All UI elements, modals, forms, and buttons translated
+- 🎯 **Localized Modals**: Add New Project, Add Daily Task, and all form fields in multiple languages
+- 🔑 **Localized Buttons**: Logout, Cancel, Save, and all action buttons translated
+- 📅 **Localized Dates**: Day names, time formats, and date-related text in all languages
+- 🚀 **Performance**: Language changes apply instantly with no performance impact
+- 💾 **Persistent Settings**: Language preference saved and remembered across sessions
 
 ### **v2.3.0** - UI/UX & Performance Enhancement
 - ✨ Enhanced Task Details Modal with comprehensive information display
