@@ -6,32 +6,37 @@ from pathlib import Path
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching for development
 
-# Set working directory
-os.chdir(Path(__file__).parent)
+# Get the directory where this script is located
+SCRIPT_DIR = Path(__file__).parent.absolute()
+print(f"📁 Script directory: {SCRIPT_DIR}")
+
+# Set working directory to script directory
+os.chdir(SCRIPT_DIR)
+print(f"📁 Working directory set to: {os.getcwd()}")
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory(SCRIPT_DIR, 'index.html')
 
 @app.route('/<path:filename>')
 def serve_file(filename):
-    return send_from_directory('.', filename)
+    return send_from_directory(SCRIPT_DIR, filename)
 
 @app.route('/pages/<path:filename>')
 def serve_pages(filename):
-    return send_from_directory('pages', filename)
+    return send_from_directory(SCRIPT_DIR / 'pages', filename)
 
 @app.route('/js/<path:filename>')
 def serve_js(filename):
-    return send_from_directory('js', filename)
+    return send_from_directory(SCRIPT_DIR / 'js', filename)
 
 @app.route('/images/<path:filename>')
 def serve_images(filename):
-    return send_from_directory('images', filename)
+    return send_from_directory(SCRIPT_DIR / 'images', filename)
 
 @app.route('/config/<path:filename>')
 def serve_config(filename):
-    return send_from_directory('config', filename)
+    return send_from_directory(SCRIPT_DIR / 'config', filename)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h', 'help']:
@@ -49,8 +54,8 @@ if __name__ == '__main__':
     
     print(f"🚀 Clario Flask Server: http://localhost:{port}")
     print(f"📁 Serving from: {os.getcwd()}")
-    print(f"🔄 Auto-reload: Enabled")
+    print(f"🔄 Auto-reload: Disabled (to prevent path issues)")
     print(f"⏹️  Ctrl+C to stop")
     print("=" * 50)
     
-    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=True)
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)

@@ -42,30 +42,51 @@ function loadDashboardData() {
 // Initialize application
 async function initializeApp() {
     try {
+        console.log('🚀 Starting app initialization...');
+        
+        // Show loading screen
+        showLoadingScreen('Initializing Firebase...');
+        
         await loadFirebase();
+        updateLoadingText('Checking authentication...');
+        
         await checkAuthState();
+        updateLoadingText('Loading user data...');
+        
         setupEventListeners();
+        updateLoadingText('Setting up interface...');
+        
         setupDateInputs(); // Set default dates for inputs
         toggleTaskDateInputs(); // Initialize date input visibility
-        loadDashboardData();
         
+        updateLoadingText('Loading dashboard data...');
+        await loadDashboardData();
+        
+        updateLoadingText('Initializing language system...');
         // Initialize language system
         await initializeAppLanguage();
         
-        // Debug panel is now initialized from debug.js
-        
+        updateLoadingText('Setting up drag and drop...');
         // Initialize drag and drop functionality after data is loaded
         setTimeout(() => {
             initializeDragAndDrop();
         }, 1000);
         
-        // Hide loading screen after app is fully initialized
+        // App fully initialized
+        console.log('✅ App initialization completed');
+        
+        // Hide loading screen and show app
         hideLoadingScreen();
+        
     } catch (error) {
         console.error('App initialization failed:', error);
+        updateLoadingText('Initialization failed: ' + error.message);
         showStatus('Application initialization failed', 'error');
-        // Hide loading screen even if there's an error
-        hideLoadingScreen();
+        
+        // Hide loading screen even on error after a delay
+        setTimeout(() => {
+            hideLoadingScreen();
+        }, 3000);
     }
 }
 
@@ -234,12 +255,9 @@ async function saveAllSettings() {
                 showStatus(`Language changed to ${selectedLanguage}!`, 'success');
                 console.log('💾 Status message shown');
                 
-                // Wait 2 seconds and reload
-                console.log('💾 Setting timeout for page reload...');
-                setTimeout(() => {
-                    console.log('💾 Reloading page now...');
-                    window.location.reload();
-                }, 2000);
+                // Update UI immediately without page reload
+                console.log('💾 Updating UI immediately...');
+                forceUpdateAllTranslations();
                 
             } catch (error) {
                 console.error('🌐 Error updating i18n system:', error);
@@ -340,9 +358,9 @@ function forceUpdateAllTranslations() {
     
     if (typeof i18n === 'undefined') {
         console.error('🌐 i18n is undefined in forceUpdateAllTranslations');
-        return;
-    }
-    
+            return;
+        }
+
     // Update elements with data-i18n attribute
     const translatableElements = document.querySelectorAll('[data-i18n]');
     console.log('🌐 Found translatable elements:', translatableElements.length);
@@ -409,9 +427,9 @@ function forceUpdateAllTextContent() {
     
     if (typeof i18n === 'undefined') {
         console.error('🌐 i18n is undefined in forceUpdateAllTextContent');
-        return;
-    }
-    
+            return;
+        }
+
     // Common text patterns to translate
     const textPatterns = {
         'Dashboard': 'navigation.dashboard',
@@ -540,14 +558,14 @@ async function loadFirebaseConfig() {
             // Wait a bit for the script to execute
         setTimeout(() => {
             if (window.firebaseConfig) {
-                    resolve();
+            resolve();
             } else {
                     reject(new Error('Firebase configuration not found'));
             }
             }, 100);
     };
         script.onerror = () => reject(new Error('Failed to load Firebase configuration'));
-    document.head.appendChild(script);
+        document.head.appendChild(script);
     });
 }
 
@@ -590,7 +608,7 @@ async function handleAuthStateChanged(user) {
         updateUserInterface();
     } else {
         // Redirect to login if not authenticated
-        window.location.href = 'login.html';
+        window.location.href = '../index.html';
     }
 }
 
@@ -601,10 +619,15 @@ async function checkAuthState() {
             unsubscribe();
             if (user) {
                 currentUser = user;
+                console.log('✅ User authenticated:', user.uid);
                 resolve();
-    } else {
-                window.location.href = 'login.html';
-    }
+            } else {
+                console.log('❌ User not authenticated');
+                currentUser = null;
+                // Redirect to login page if not authenticated
+                window.location.href = '../index.html';
+                resolve();
+            }
         });
     });
 }
@@ -643,7 +666,7 @@ async function loadUserData() {
         }
         
         console.log('User data loaded:', userData);
-                    } catch (error) {
+    } catch (error) {
         console.error('Failed to load user data:', error);
         showStatus('Failed to load user data', 'error');
     }
@@ -661,7 +684,7 @@ function migrateOldUserData(oldData) {
         },
         preferences: {
             theme: 'dark',
-            language: 'en',
+            language: 'tr',
             timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             defaultView: 'dashboard',
             notificationSettings: {
@@ -678,7 +701,27 @@ function migrateOldUserData(oldData) {
                 action: 'data_migrated',
                 timestamp: new Date().toISOString()
             }
-        ]
+        ],
+        budget: {
+            settings: {
+                currency: 'TRY',
+                defaultPeriod: 'monthly',
+                notifications: {
+                    overspending: true,
+                    budgetReminder: true,
+                    billReminder: true
+                }
+            },
+            categories: [],
+            transactions: [],
+            periods: {
+                daily: { budget: 0, spent: 0, remaining: 0 },
+                weekly: { budget: 0, spent: 0, remaining: 0 },
+                monthly: { budget: 0, spent: 0, remaining: 0 },
+                yearly: { budget: 0, spent: 0, remaining: 0 }
+            },
+            goals: []
+        }
     };
 }
 
@@ -703,7 +746,7 @@ function createDefaultUserData() {
         },
         preferences: {
             theme: 'dark',
-            language: 'en',
+            language: 'tr',
             timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             defaultView: 'dashboard',
             notificationSettings: {
@@ -715,7 +758,27 @@ function createDefaultUserData() {
         projects: [],
         tasks: [],
         dailyTasks: [],
-        activityLog: []
+        activityLog: [],
+        budget: {
+            settings: {
+                currency: 'TRY',
+                defaultPeriod: 'monthly',
+                notifications: {
+                    overspending: true,
+                    budgetReminder: true,
+                    billReminder: true
+                }
+            },
+            categories: [],
+            transactions: [],
+            periods: {
+                daily: { budget: 0, spent: 0, remaining: 0 },
+                weekly: { budget: 0, spent: 0, remaining: 0 },
+                monthly: { budget: 0, spent: 0, remaining: 0 },
+                yearly: { budget: 0, spent: 0, remaining: 0 }
+            },
+            goals: []
+        }
     };
 }
 
@@ -935,7 +998,7 @@ function createTaskCard(task) {
                 <span>${projectName || getText('tasks.noProject')}</span>
             </div>
             <span>${task.taskType === 'range' ? 
-                formatDateRange(task.startDate, task.dueDate) : 
+                formatDateRange(task.startDate, task.endDate) : 
                 formatDate(task.dueDate)}</span>
         </div>
         <div class="task-actions">
@@ -1119,7 +1182,7 @@ async function waitForI18n() {
     return new Promise((resolve) => {
         const checkI18n = () => {
             if (typeof i18n !== 'undefined' && i18n.t && typeof i18n.t === 'function') {
-                resolve();
+            resolve();
             } else {
                 setTimeout(checkI18n, 50);
             }
@@ -1173,6 +1236,9 @@ async function loadSectionData(sectionName) {
             break;
         case 'activity':
             renderActivityLog();
+            break;
+        case 'budget':
+            renderBudgetOverview();
             break;
     }
 }
@@ -1352,10 +1418,10 @@ function createDailyTaskCard(dailyTask) {
             </div>
         </div>
         <div class="card-actions">
-            <button class="btn ${isCompletedToday ? 'btn-complete' : 'btn-edit'}" 
-                    onclick="event.stopPropagation(); ${isCompletedToday ? 'uncompleteDailyTask' : 'completeDailyTask'}('${dailyTask.id}')"
-                    ${!isActiveToday ? 'disabled' : ''}>
-                ${isCompletedToday ? '✓' : getText('common.complete')}
+            <button class="btn ${dailyTask.status === 'active' ? 'btn-active' : 'btn-inactive'}" 
+                    onclick="event.stopPropagation(); toggleDailyTaskStatus('${dailyTask.id}')"
+                    title="${dailyTask.status === 'active' ? 'Deactivate' : 'Activate'}">
+                ${dailyTask.status === 'active' ? '🟢' : '🔴'}
             </button>
             <button class="btn btn-edit" onclick="event.stopPropagation(); editDailyTask('${dailyTask.id}')">${getText('common.edit')}</button>
             <button class="btn btn-delete" onclick="event.stopPropagation(); deleteDailyTask('${dailyTask.id}')">${getText('common.delete')}</button>
@@ -1607,11 +1673,11 @@ function renderPreferencesForm() {
                         <p>${getText('settings.languageDescription')}</p>
                     </div>
                     <select id="languageSelect" class="setting-select">
-                        <option value="en" ${userData.preferences?.language === 'en' ? 'selected' : ''}>English</option>
-                        <option value="tr" ${userData.preferences?.language === 'tr' ? 'selected' : ''}>Türkçe</option>
-                        <option value="es" ${userData.preferences?.language === 'es' ? 'selected' : ''}>Español</option>
-                        <option value="fr" ${userData.preferences?.language === 'fr' ? 'selected' : ''}>Français</option>
-                        <option value="de" ${userData.preferences?.language === 'de' ? 'selected' : ''}>Deutsch</option>
+                                <option value="tr" ${userData.preferences?.language === 'tr' ? 'selected' : ''}>Türkçe</option>
+        <option value="en" ${userData.preferences?.language === 'en' ? 'selected' : ''}>English</option>
+        <option value="es" ${userData.preferences?.language === 'es' ? 'selected' : ''}>Español</option>
+        <option value="fr" ${userData.preferences?.language === 'fr' ? 'selected' : ''}>Français</option>
+        <option value="de" ${userData.preferences?.language === 'de' ? 'selected' : ''}>Deutsch</option>
                     </select>
                 </div>
             </div>
@@ -1767,49 +1833,132 @@ function setupEventListeners() {
 
 // Show add task modal
 function showAddTaskModal() {
+    console.log('🚀 showAddTaskModal called');
+    console.log('👤 currentUser:', currentUser);
+    
     // Check if user is authenticated
     if (!currentUser || !currentUser.uid) {
+        console.log('❌ User not authenticated');
         showStatus('Please login to add tasks', 'error');
-            return;
+        return;
+    }
+    
+    console.log('✅ User authenticated, proceeding...');
+    
+    try {
+        populateProjectSelect();
+        console.log('✅ populateProjectSelect completed');
+        
+        // Reset and setup date inputs
+        setupDateInputs();
+        console.log('✅ setupDateInputs completed');
+        
+        toggleTaskDateInputs();
+        console.log('✅ toggleTaskDateInputs completed');
+        
+        const modal = document.getElementById('addTaskModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Add show class for animation
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            console.log('✅ Modal displayed with show class');
+            
+            // Debug: Check modal state
+            console.log('🔍 Modal display style:', modal.style.display);
+            console.log('🔍 Modal classList:', modal.classList.toString());
+            console.log('🔍 Modal computed style:', window.getComputedStyle(modal).display);
+            console.log('🔍 Modal computed visibility:', window.getComputedStyle(modal).visibility);
+            console.log('🔍 Modal computed opacity:', window.getComputedStyle(modal).opacity);
+        } else {
+            console.log('❌ Modal element not found');
         }
-    
-    populateProjectSelect();
-    
-    // Reset and setup date inputs
-    setupDateInputs();
-    toggleTaskDateInputs();
-    
-    document.getElementById('addTaskModal').style.display = 'flex';
-    setupFormValidation('addTaskForm', handleAddTask);
+        
+        setupFormValidation('addTaskForm', handleAddTask);
+        console.log('✅ Form validation setup completed');
+    } catch (error) {
+        console.error('❌ Error in showAddTaskModal:', error);
+    }
 }
 
 // Show add project modal
 function showAddProjectModal() {
+    console.log('🚀 showAddProjectModal called');
+    console.log('👤 currentUser:', currentUser);
+    
     // Check if user is authenticated
     if (!currentUser || !currentUser.uid) {
+        console.log('❌ User not authenticated');
         showStatus('Please login to add projects', 'error');
-            return;
-        }
+        return;
+    }
     
-    document.getElementById('addProjectModal').style.display = 'flex';
-    setupFormValidation('addProjectForm', handleAddProject);
+    console.log('✅ User authenticated, proceeding...');
+    
+    try {
+        const modal = document.getElementById('addProjectModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Add show class for animation
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            console.log('✅ Project Modal displayed with show class');
+        } else {
+            console.log('❌ Project Modal element not found');
+        }
+        
+        setupFormValidation('addProjectForm', handleAddProject);
+        console.log('✅ Project Form validation setup completed');
+    } catch (error) {
+        console.error('❌ Error in showAddProjectModal:', error);
+    }
 }
 
 // Show add daily task modal
 function showAddDailyTaskModal() {
+    console.log('🚀 showAddDailyTaskModal called');
+    console.log('👤 currentUser:', currentUser);
+    
     // Check if user is authenticated
     if (!currentUser || !currentUser.uid) {
+        console.log('❌ User not authenticated');
         showStatus('Please login to add daily tasks', 'error');
-            return;
+        return;
+    }
+    
+    console.log('✅ User authenticated, proceeding...');
+    
+    try {
+        const modal = document.getElementById('addDailyTaskModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Add show class for animation
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            console.log('✅ Daily Task Modal displayed with show class');
+        } else {
+            console.log('❌ Daily Task Modal element not found');
         }
         
-    document.getElementById('addDailyTaskModal').style.display = 'flex';
-    setupFormValidation('addDailyTaskModal', handleAddDailyTask);
+        setupFormValidation('addDailyTaskModal', handleAddDailyTask);
+        console.log('✅ Daily Task Form validation setup completed');
+    } catch (error) {
+        console.error('❌ Error in showAddDailyTaskModal:', error);
+    }
 }
 
 // Close modal
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300); // Wait for animation to complete
+    }
     // Reset form
     const form = document.querySelector(`#${modalId} form`);
     if (form) form.reset();
@@ -1860,9 +2009,9 @@ async function handleAddTask(event) {
         priority: document.getElementById('taskPriority').value,
         taskType: document.getElementById('taskType').value,
         startDate: document.getElementById('taskStartDate').value || null,
+        endDate: document.getElementById('taskEndDate').value || null,
         dueDate: document.getElementById('taskType').value === 'single' ? 
-                 (document.getElementById('taskDueDate').value || getTodayDate()) : 
-                 (document.getElementById('taskEndDate').value || getTodayDate()),
+                 (document.getElementById('taskDueDate').value || getTodayDate()) : null,
         labels: document.getElementById('taskLabels').value.split(',').map(label => label.trim()).filter(label => label),
         status: 'active',
         subtasks: [],
@@ -2063,7 +2212,7 @@ function formatDate(dateString) {
         return `${formattedDate} (Due today)`;
     } else if (diffDays === 1) {
         return `${formattedDate} (Due tomorrow)`;
-    } else {
+            } else {
         return `${formattedDate} (Due in ${diffDays} days)`;
     }
 }
@@ -2073,25 +2222,55 @@ function formatDateRange(startDate, endDate) {
     if (!startDate && !endDate) return 'No dates set';
     
     if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+        // Both dates exist - show duration
+        const start = new Date(startDate);
+        const end = new Date(endDate);
         const diffTime = end - start;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        const startFormatted = formatDateForDisplay(startDate);
-        const endFormatted = formatDateForDisplay(endDate);
-        
         if (diffDays === 0) {
-            return `${startFormatted} - ${endFormatted} (Same day)`;
+            return `Same day`;
         } else if (diffDays === 1) {
-            return `${startFormatted} - ${endFormatted} (1 day)`;
+            return `1 day`;
         } else {
-            return `${startFormatted} - ${endFormatted} (${diffDays} days)`;
+            return `${diffDays} days`;
         }
     } else if (startDate) {
-        return `Starts: ${formatDateForDisplay(startDate)}`;
+        // Only start date exists - show relative time to start
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const diffTime = start - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            return `Starts: Today`;
+        } else if (diffDays === 1) {
+            return `Starts: Tomorrow`;
+        } else if (diffDays > 1) {
+            return `Starts: In ${diffDays} days`;
+        } else {
+            return `Starts: ${Math.abs(diffDays)} days ago`;
+        }
     } else if (endDate) {
-        return `Due: ${formatDateForDisplay(endDate)}`;
+        // Only end date exists - show relative time to due date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+        const diffTime = end - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            return `Due: Today`;
+        } else if (diffDays === 1) {
+            return `Due: Tomorrow`;
+        } else if (diffDays > 1) {
+            return `Due: In ${diffDays} days`;
+        } else {
+            return `Due: ${Math.abs(diffDays)} days ago`;
+        }
     }
     
     return 'No dates set';
@@ -2263,6 +2442,11 @@ function toggleTaskDateInputs() {
     const dateRangeRow = document.getElementById('dateRangeRow');
     const todayString = window.getTodayDate ? window.getTodayDate() : new Date().toISOString().split('T')[0]; // Use debug time if available
     
+    // Calculate tomorrow's date for end date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowString = tomorrow.toISOString().split('T')[0];
+    
     if (taskType === 'single') {
         singleDateRow.style.display = 'flex';
         dateRangeRow.style.display = 'none';
@@ -2272,23 +2456,24 @@ function toggleTaskDateInputs() {
         dueDateInput.value = todayString;
         dueDateInput.setAttribute('required', 'required');
         
-        // Clear range inputs and remove required
+        // Set range dates as well (for consistency and easy switching)
         const startDateInput = document.getElementById('taskStartDate');
         const endDateInput = document.getElementById('taskEndDate');
-        startDateInput.value = '';
-        endDateInput.value = '';
-        startDateInput.removeAttribute('required');
-        endDateInput.removeAttribute('required');
+        startDateInput.value = todayString;
+        endDateInput.value = tomorrowString;
+        startDateInput.setAttribute('required', 'required');
+        endDateInput.setAttribute('required', 'required');
         
     } else {
         singleDateRow.style.display = 'none';
         dateRangeRow.style.display = 'flex';
         
-        // Set range dates to today and make end date required
+        // Set range dates - start to today, end to tomorrow
         const startDateInput = document.getElementById('taskStartDate');
         const endDateInput = document.getElementById('taskEndDate');
         startDateInput.value = todayString;
-        endDateInput.value = todayString;
+        endDateInput.value = tomorrowString;
+        startDateInput.setAttribute('required', 'required');
         endDateInput.setAttribute('required', 'required');
         
         // Clear single input and remove required
@@ -2448,7 +2633,17 @@ async function editProject(projectId) {
             document.getElementById('editProjectColor').value = project.color || '#3AA8FF';
             
             // Show edit modal
-            document.getElementById('editProjectModal').style.display = 'flex';
+            const modal = document.getElementById('editProjectModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                // Add show class for animation
+                setTimeout(() => {
+                    modal.classList.add('show');
+                }, 10);
+                console.log('✅ Edit Project Modal displayed with show class');
+            } else {
+                console.log('❌ Edit Project Modal element not found');
+            }
             
             // Setup form validation
             setupFormValidation('editProjectForm', handleEditProject);
@@ -2469,7 +2664,7 @@ async function handleEditProject(event) {
         
         if (!project) {
             showStatus('Project not found', 'error');
-            return;
+                return;
         }
         
         // Update project data
@@ -2641,11 +2836,21 @@ async function editDailyTask(dailyTaskId) {
             }
             
             // Show edit modal
-            document.getElementById('editDailyTaskModal').style.display = 'flex';
+            const modal = document.getElementById('editDailyTaskModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                // Add show class for animation
+                setTimeout(() => {
+                    modal.classList.add('show');
+                }, 10);
+                console.log('✅ Edit Daily Task Modal displayed with show class');
+            } else {
+                console.log('❌ Edit Daily Task Modal element not found');
+            }
             
             // Setup form validation
             setupFormValidation('editDailyTaskForm', handleEditDailyTask);
-        } else {
+    } else {
             showStatus('Daily task not found', 'error');
         }
     } catch (error) {
@@ -2706,6 +2911,39 @@ async function handleEditDailyTask(event) {
     } catch (error) {
         console.error('Failed to update daily task:', error);
         showStatus('Failed to update daily task: ' + error.message, 'error');
+    }
+}
+
+// Toggle daily task status (active/inactive)
+async function toggleDailyTaskStatus(dailyTaskId) {
+    try {
+        const dailyTask = userData.dailyTasks.find(dt => dt.id === dailyTaskId);
+        if (!dailyTask) {
+            showStatus('Daily task not found', 'error');
+            return;
+        }
+        
+        // Toggle status
+        dailyTask.status = dailyTask.status === 'active' ? 'inactive' : 'active';
+        
+        // Update Firestore
+        await db.collection('user_data').doc(currentUser.uid).update({
+            dailyTasks: userData.dailyTasks
+        });
+        
+        // Add to activity log
+        addActivityLog('daily_task_status_toggled', dailyTaskId);
+        
+        // Update UI
+        updateDashboardCounts();
+        renderDailyTasks();
+        
+        const statusText = dailyTask.status === 'active' ? 'activated' : 'deactivated';
+        showStatus(`Daily task ${statusText} successfully!`, 'success');
+        
+    } catch (error) {
+        console.error('Failed to toggle daily task status:', error);
+        showStatus('Failed to toggle daily task status: ' + error.message, 'error');
     }
 }
 
@@ -2867,17 +3105,18 @@ function toggleEditTaskDateInputs() {
         singleDateRow.style.display = 'flex';
         dateRangeRow.style.display = 'none';
         
-        // Set required attributes
+        // Set required attributes - due date required for single tasks
         document.getElementById('editTaskDueDate').setAttribute('required', 'required');
+        // Start and end dates are always available but not required for single tasks
         document.getElementById('editTaskStartDate').removeAttribute('required');
         document.getElementById('editTaskEndDate').removeAttribute('required');
     } else {
         singleDateRow.style.display = 'none';
         dateRangeRow.style.display = 'flex';
         
-        // Set required attributes
+        // Set required attributes - start and end dates required for range tasks
         document.getElementById('editTaskDueDate').removeAttribute('required');
-        document.getElementById('editTaskStartDate').removeAttribute('required');
+        document.getElementById('editTaskStartDate').setAttribute('required', 'required');
         document.getElementById('editTaskEndDate').setAttribute('required', 'required');
     }
 }
@@ -2902,16 +3141,22 @@ function editTask(taskId) {
     document.getElementById('editTaskPriority').value = task.priority;
     document.getElementById('editTaskLabels').value = task.labels ? task.labels.join(', ') : '';
     
-    // Set dates based on task type
-    if (task.taskType === 'range') {
-        document.getElementById('editTaskStartDate').value = task.startDate || '';
-        document.getElementById('editTaskEndDate').value = task.endDate || '';
-        document.getElementById('editTaskDueDate').value = '';
-    } else {
+    // Set dates - always populate start and end dates
+    console.log('🔍 Task type:', task.taskType);
+    console.log('🔍 Task dates - startDate:', task.startDate, 'endDate:', task.endDate, 'dueDate:', task.dueDate);
+    
+    // Always set start and end dates if they exist
+    document.getElementById('editTaskStartDate').value = task.startDate || '';
+    document.getElementById('editTaskEndDate').value = task.endDate || '';
+    
+    // Set due date for single tasks
+    if (task.taskType === 'single') {
         document.getElementById('editTaskDueDate').value = task.dueDate || '';
-        document.getElementById('editTaskStartDate').value = '';
-        document.getElementById('editTaskEndDate').value = '';
+    } else {
+        document.getElementById('editTaskDueDate').value = '';
     }
+    
+    console.log('✅ Task dates set - startDate:', task.startDate, 'endDate:', task.endDate, 'dueDate:', task.dueDate);
     
     // Toggle date input visibility
     toggleEditTaskDateInputs();
@@ -2920,7 +3165,17 @@ function editTask(taskId) {
     setupFormValidation('editTaskForm', handleEditTask);
     
     // Show modal
-    document.getElementById('editTaskModal').style.display = 'flex';
+    const modal = document.getElementById('editTaskModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Add show class for animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        console.log('✅ Edit Task Modal displayed with show class');
+    } else {
+        console.log('❌ Edit Task Modal element not found');
+    }
 }
 
 
@@ -3034,16 +3289,25 @@ async function handleEditTask(event) {
         task.labels = document.getElementById('editTaskLabels').value ? 
             document.getElementById('editTaskLabels').value.split(',').map(l => l.trim()) : [];
         
-        // Update dates based on task type
-        if (task.taskType === 'range') {
-            task.startDate = document.getElementById('editTaskStartDate').value;
-            task.endDate = document.getElementById('editTaskEndDate').value;
-            task.dueDate = null;
+        // Update dates - always save start and end dates
+        console.log('🔍 Updating task dates - taskType:', task.taskType);
+        
+        const startDate = document.getElementById('editTaskStartDate').value;
+        const endDate = document.getElementById('editTaskEndDate').value;
+        const dueDate = document.getElementById('editTaskDueDate').value;
+        
+        // Always save start and end dates
+        task.startDate = startDate;
+        task.endDate = endDate;
+        
+        // Save due date for single tasks
+        if (task.taskType === 'single') {
+            task.dueDate = dueDate;
         } else {
-            task.dueDate = document.getElementById('editTaskDueDate').value;
-            task.startDate = null;
-            task.endDate = null;
+            task.dueDate = null;
         }
+        
+        console.log('✅ Task dates updated - startDate:', startDate, 'endDate:', endDate, 'dueDate:', dueDate);
         
         // Add updated timestamp
         task.updatedAt = new Date().toISOString();
@@ -3081,11 +3345,51 @@ async function handleEditTask(event) {
     }
 }
 
+// Loading Screen Functions
+function showLoadingScreen(message = 'Loading...') {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingText = document.querySelector('.loading-text');
+    
+    if (loadingScreen && loadingText) {
+        loadingScreen.style.display = 'flex';
+        loadingText.textContent = message;
+        console.log('🔄 Loading screen shown:', message);
+    }
+}
+
+function updateLoadingText(message) {
+    const loadingText = document.querySelector('.loading-text');
+    if (loadingText) {
+        loadingText.textContent = message;
+        console.log('🔄 Loading text updated:', message);
+    }
+}
+
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const appContainer = document.getElementById('appContainer');
+    
+    if (loadingScreen && appContainer) {
+        // Fade out loading screen
+        loadingScreen.classList.add('hidden');
+        
+        // Show app container
+        appContainer.classList.add('loaded');
+        
+        // Remove loading screen after animation
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+        }, 500);
+        
+        console.log('✅ Loading screen hidden, app shown');
+    }
+}
+
 // Logout function
 async function logout() {
     try {
         await auth.signOut();
-        window.location.href = 'login.html';
+        window.location.href = '../index.html';
     } catch (error) {
         console.error('Logout failed:', error);
         showStatus('Logout failed: ' + error.message, 'error');
@@ -3352,11 +3656,14 @@ document.addEventListener('DOMContentLoaded', initializeApp);
 // Additional event listener for language system initialization
 document.addEventListener('DOMContentLoaded', function() {
     // Wait a bit for i18n system to be ready
-    setTimeout(() => {
+                    setTimeout(() => {
         if (typeof i18n !== 'undefined' && i18n.initialized) {
             forceUpdateAllTranslations();
-        }
-    }, 500);
+                        }
+                    }, 500);
+    
+    // Setup budget form event listeners
+    setupBudgetFormListeners();
 });
 
 // Global exports for HTML onclick handlers
@@ -3366,8 +3673,12 @@ window.editProject = editProject;
 window.handleEditProject = handleEditProject;
 window.editDailyTask = editDailyTask;
 window.handleEditDailyTask = handleEditDailyTask;
+window.toggleDailyTaskStatus = toggleDailyTaskStatus;
 window.toggleEditTaskDateInputs = toggleEditTaskDateInputs;
 window.logout = logout;
+window.showLoadingScreen = showLoadingScreen;
+window.updateLoadingText = updateLoadingText;
+window.hideLoadingScreen = hideLoadingScreen;
 
 // Global exports for drag and drop functionality
 window.initializeDragAndDrop = initializeDragAndDrop;
@@ -3585,7 +3896,7 @@ function resetAccountSettings() {
     document.getElementById('emailNotifications').checked = userData.preferences?.emailNotifications || false;
     document.getElementById('pushNotifications').checked = userData.preferences?.pushNotifications || false;
     document.getElementById('darkMode').checked = userData.preferences?.darkMode || false;
-    document.getElementById('languageSelect').value = userData.preferences?.language || 'en';
+    document.getElementById('languageSelect').value = userData.preferences?.language || 'tr';
     document.getElementById('timezoneSelect').value = userData.preferences?.timezone || 'UTC';
     
     showStatus('Account settings reset to original values', 'info');
@@ -3601,12 +3912,12 @@ function showChangePasswordForm() {
             <div class="modal-header">
                 <h3>Change Password</h3>
                 <span class="close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
-            </div>
+                </div>
             <form id="changePasswordForm">
                 <div class="form-group">
                     <label for="currentPassword">Current Password</label>
                     <input type="password" id="currentPassword" required>
-                </div>
+            </div>
                 <div class="form-group">
                     <label for="newPassword">New Password</label>
                     <input type="password" id="newPassword" required>
@@ -3618,7 +3929,7 @@ function showChangePasswordForm() {
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
                     <button type="submit" class="btn-primary">Change Password</button>
-                </div>
+            </div>
             </form>
         </div>
     `;
@@ -4007,7 +4318,7 @@ function updateDashboardProfileInfo() {
                     profileAvatarLarge.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
                     console.log('✅ Dashboard profile avatar updated with placeholder');
                 }
-            } catch (error) {
+    } catch (error) {
                 console.error('Failed to update dashboard profile avatar:', error);
                 profileAvatarLarge.innerHTML = userData.profile.name ? userData.profile.name.charAt(0).toUpperCase() : 'U';
             }
@@ -4069,7 +4380,7 @@ async function saveGeneralSettings() {
 function resetGeneralSettings() {
     // Reset to original values
     document.getElementById('darkMode').checked = userData.preferences?.darkMode || false;
-    document.getElementById('languageSelect').value = userData.preferences?.language || 'en';
+    document.getElementById('languageSelect').value = userData.preferences?.language || 'tr';
     document.getElementById('timezoneSelect').value = userData.preferences?.timezone || 'UTC';
     
     showStatus('General settings reset to original values', 'info');
@@ -4110,7 +4421,7 @@ function resetNotificationSettings() {
 function resetAllSettings() {
     // Reset all settings to original values
     document.getElementById('darkMode').checked = userData.preferences?.darkMode || false;
-    document.getElementById('languageSelect').value = userData.preferences?.language || 'en';
+    document.getElementById('languageSelect').value = userData.preferences?.language || 'tr';
     document.getElementById('emailNotifications').checked = userData.preferences?.emailNotifications || false;
     document.getElementById('pushNotifications').checked = userData.preferences?.pushNotifications || false;
     document.getElementById('twoFactorAuth').checked = userData.preferences?.twoFactorAuth || false;
@@ -4191,7 +4502,7 @@ function showLocationDropdown() {
 
 function hideLocationDropdown() {
     // Delay hiding to allow click on options
-    setTimeout(() => {
+        setTimeout(() => {
         const dropdown = document.getElementById('locationDropdown');
         if (dropdown) {
             dropdown.style.display = 'none';
@@ -4310,24 +4621,70 @@ window.resetProfile = resetProfile;
 
 // Show add note modal
 function showAddNoteModal() {
+    console.log('🚀 showAddNoteModal called');
+    console.log('👤 currentUser:', currentUser);
+    
+    // Check if user is authenticated
     if (!currentUser || !currentUser.uid) {
+        console.log('❌ User not authenticated');
         showStatus('Please login to add notes', 'error');
         return;
     }
     
-    document.getElementById('addNoteModal').style.display = 'flex';
-    setupFormValidation('addNoteForm', handleAddNote);
+    console.log('✅ User authenticated, proceeding...');
+    
+    try {
+        const modal = document.getElementById('addNoteModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Add show class for animation
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            console.log('✅ Note Modal displayed with show class');
+        } else {
+            console.log('❌ Note Modal element not found');
+        }
+        
+        setupFormValidation('addNoteForm', handleAddNote);
+        console.log('✅ Note Form validation setup completed');
+    } catch (error) {
+        console.error('❌ Error in showAddNoteModal:', error);
+    }
 }
 
 // Show add shopping list modal
 function showAddShoppingListModal() {
+    console.log('🚀 showAddShoppingListModal called');
+    console.log('👤 currentUser:', currentUser);
+    
+    // Check if user is authenticated
     if (!currentUser || !currentUser.uid) {
+        console.log('❌ User not authenticated');
         showStatus('Please login to add shopping lists', 'error');
         return;
     }
     
-    document.getElementById('addShoppingListModal').style.display = 'flex';
-    setupFormValidation('addShoppingListForm', handleAddShoppingList);
+    console.log('✅ User authenticated, proceeding...');
+    
+    try {
+        const modal = document.getElementById('addShoppingListModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Add show class for animation
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            console.log('✅ Shopping List Modal displayed with show class');
+        } else {
+            console.log('❌ Shopping List Modal element not found');
+        }
+        
+        setupFormValidation('addShoppingListForm', handleAddShoppingList);
+        console.log('✅ Shopping List Form validation setup completed');
+    } catch (error) {
+        console.error('❌ Error in showAddShoppingListModal:', error);
+    }
 }
 
 // Handle add note
@@ -4623,7 +4980,18 @@ function showEditNoteModal(note) {
     document.getElementById('editNoteContent').value = note.content;
     document.getElementById('editNoteType').value = note.type;
     
-    document.getElementById('editNoteModal').style.display = 'flex';
+    const modal = document.getElementById('editNoteModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Add show class for animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        console.log('✅ Edit Note Modal displayed with show class');
+    } else {
+        console.log('❌ Edit Note Modal element not found');
+    }
+    
     setupFormValidation('editNoteForm', handleEditNote);
 }
 
@@ -4647,7 +5015,18 @@ function showEditShoppingListModal(note) {
         container.appendChild(itemRow);
     }
     
-    document.getElementById('editShoppingListModal').style.display = 'flex';
+    const modal = document.getElementById('editShoppingListModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Add show class for animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        console.log('✅ Edit Shopping List Modal displayed with show class');
+    } else {
+        console.log('❌ Edit Shopping List Modal element not found');
+    }
+    
     setupFormValidation('editShoppingListForm', handleEditShoppingList);
 }
 
@@ -4802,7 +5181,7 @@ function getText(key) {
         return i18n.t(key);
     }
     // Fallback to key if i18n is not available
-    return key;
+        return key;
 }
 
 // Toggle shopping item completion
@@ -4845,6 +5224,1633 @@ window.editNote = editNote;
 window.deleteNote = deleteNote;
 window.filterNotes = filterNotes;
 window.toggleShoppingItem = toggleShoppingItem;
+
+// Budget Overview Functions
+async function renderBudgetOverview() {
+    console.log('🔍 Debug: renderBudgetOverview called');
+    console.log('🔍 Debug: userData:', userData);
+    console.log('🔍 Debug: userData.budget:', userData?.budget);
+    
+    if (!userData || !userData.budget) {
+        console.log('⚠️ Debug: userData or userData.budget is missing, initializing...');
+        // Initialize budget data if it doesn't exist
+        await initializeBudgetData();
+    } else {
+        console.log('✅ Debug: Budget data exists, cleaning sample data if any...');
+        // Clean existing budget data to remove sample data
+        await cleanExistingBudgetData();
+    }
+    
+    console.log('🔍 Debug: After initialization/cleaning, userData.budget:', userData.budget);
+    console.log('🔍 Debug: Categories count:', userData.budget?.categories?.length || 0);
+    console.log('🔍 Debug: Transactions count:', userData.budget?.transactions?.length || 0);
+    console.log('🔍 Debug: Goals count:', userData.budget?.goals?.length || 0);
+    
+    // Initialize chart if not already done
+    if (!budgetChart) {
+        console.log('🔍 Debug: Initializing chart...');
+        initializeCharts();
+    }
+    
+    // Set up real-time listener if not already set up
+    if (!window.budgetUnsubscribe) {
+        console.log('🔍 Debug: Setting up real-time listener...');
+        setupBudgetRealtimeListener();
+    }
+    
+    // Update all budget components
+    console.log('🔍 Debug: Updating budget overview...');
+    updateBudgetOverview();
+    
+    console.log('🔍 Debug: renderBudgetOverview completed');
+}
+
+async function initializeBudgetData() {
+    const defaultBudget = {
+        settings: {
+            currency: 'TRY',
+            defaultPeriod: 'monthly',
+            notifications: {
+                overspending: true,
+                budgetReminder: true,
+                billReminder: true
+            }
+        },
+        categories: [],
+        transactions: [],
+        periods: {
+            daily: { budget: 0, spent: 0, remaining: 0 },
+            weekly: { budget: 0, spent: 0, remaining: 0 },
+            monthly: { budget: 0, spent: 0, remaining: 0 },
+            yearly: { budget: 0, spent: 0, remaining: 0 }
+        },
+        goals: []
+    };
+    
+    userData.budget = defaultBudget;
+    
+    // Save to Firestore
+    await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+    console.log('✅ Budget data initialized for new user');
+    
+    // Set up real-time listener for budget data
+    setupBudgetRealtimeListener();
+}
+
+// Clean existing budget data to remove sample data
+async function cleanExistingBudgetData() {
+    // Check if budget data contains sample data
+    const hasSampleData = userData.budget.categories.some(cat => 
+        cat.name === 'Gıda' || cat.name === 'Ulaşım' || cat.name === 'Maaş'
+    ) || userData.budget.transactions.some(trans => 
+        trans.description === 'Market alışverişi' || trans.description === 'Ocak maaşı'
+    );
+    
+    if (hasSampleData) {
+        console.log('🧹 Cleaning sample budget data...');
+        
+        // Reset to clean state
+        userData.budget.categories = [];
+        userData.budget.transactions = [];
+        userData.budget.periods = {
+            daily: { budget: 0, spent: 0, remaining: 0 },
+            weekly: { budget: 0, spent: 0, remaining: 0 },
+            monthly: { budget: 0, spent: 0, remaining: 0 },
+            yearly: { budget: 0, spent: 0, remaining: 0 }
+        };
+        userData.budget.goals = [];
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        console.log('✅ Sample budget data cleaned');
+    }
+}
+
+
+
+// Set up real-time listener for budget data updates
+function setupBudgetRealtimeListener() {
+    if (!currentUser || !currentUser.uid) {
+        console.log('⚠️ No current user, skipping real-time listener setup');
+            return;
+        }
+    
+    console.log('🔄 Setting up real-time budget data listener...');
+    
+    // Listen for real-time updates to user's budget data
+    const unsubscribe = db.collection('user_data').doc(currentUser.uid)
+        .onSnapshot((doc) => {
+            if (doc.exists()) {
+                const updatedData = doc.data();
+                if (updatedData.budget && JSON.stringify(updatedData.budget) !== JSON.stringify(userData.budget)) {
+                    console.log('🔄 Real-time budget data update received');
+                    userData.budget = updatedData.budget;
+                    updateBudgetOverview();
+                }
+            }
+        }, (error) => {
+            console.error('❌ Error in real-time budget listener:', error);
+        });
+    
+    // Store the unsubscribe function for cleanup
+    window.budgetUnsubscribe = unsubscribe;
+    console.log('✅ Real-time budget listener set up successfully');
+}
+
+function updateBudgetCards() {
+    if (!userData || !userData.budget || !userData.budget.periods) return;
+    
+    const periods = userData.budget.periods;
+    
+    // Update daily budget
+    const dailyBudgetElement = document.getElementById('dailyBudgetAmount');
+    const dailyProgressElement = document.getElementById('dailyProgressFill');
+    if (dailyBudgetElement && dailyProgressElement) {
+        const daily = periods.daily;
+        dailyBudgetElement.textContent = `${daily.remaining} ₺`;
+        const progress = daily.budget > 0 ? ((daily.budget - daily.remaining) / daily.budget) * 100 : 0;
+        dailyProgressElement.style.width = `${Math.min(progress, 100)}%`;
+    }
+    
+    // Update weekly budget
+    const weeklyBudgetElement = document.getElementById('weeklyBudgetAmount');
+    const weeklyProgressElement = document.getElementById('weeklyProgressFill');
+    if (weeklyBudgetElement && weeklyProgressElement) {
+        const weekly = periods.weekly;
+        weeklyBudgetElement.textContent = `${weekly.remaining} ₺`;
+        const progress = weekly.budget > 0 ? ((weekly.budget - weekly.remaining) / weekly.budget) * 100 : 0;
+        weeklyProgressElement.style.width = `${Math.min(progress, 100)}%`;
+    }
+    
+    // Update monthly budget
+    const monthlyBudgetElement = document.getElementById('monthlyBudgetAmount');
+    const monthlyProgressElement = document.getElementById('monthlyProgressFill');
+    if (monthlyBudgetElement && monthlyProgressElement) {
+        const monthly = periods.monthly;
+        monthlyBudgetElement.textContent = `${monthly.remaining} ₺`;
+        const progress = monthly.budget > 0 ? ((monthly.budget - monthly.remaining) / monthly.budget) * 100 : 0;
+        monthlyProgressElement.style.width = `${Math.min(progress, 100)}%`;
+    }
+}
 window.addEditShoppingItem = addEditShoppingItem;
+
+// Budget Management Functions
+let budgetChart = null;
+let currentBudgetPeriod = 'daily';
+let customDateRange = null;
+
+// Switch budget period
+function switchBudgetPeriod(period) {
+    console.log('🔍 Debug: Switching budget period from', currentBudgetPeriod, 'to', period);
+    
+    currentBudgetPeriod = period;
+    
+    // Hide custom date selector if switching to a standard period
+    if (period !== 'custom') {
+        hideCustomDateSelector();
+    }
+    
+    // Update active tab
+    document.querySelectorAll('.period-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.period === period) {
+            tab.classList.add('active');
+        }
+    });
+    
+    console.log('🔍 Debug: Period switched, updating budget overview...');
+    updateBudgetOverview();
+}
+
+// Custom date selector functions
+function showCustomDateSelector() {
+    const selector = document.getElementById('customDateSelector');
+    if (selector) {
+        selector.style.display = 'flex';
+        // Set default dates (current month)
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        document.getElementById('customStartDate').value = firstDay.toISOString().split('T')[0];
+        document.getElementById('customEndDate').value = lastDay.toISOString().split('T')[0];
+    }
+}
+
+function hideCustomDateSelector() {
+    const selector = document.getElementById('customDateSelector');
+    if (selector) {
+        selector.style.display = 'none';
+    }
+}
+
+function updateCustomDateRange() {
+    // This function can be used to validate date ranges or provide real-time feedback
+    const startDate = document.getElementById('customStartDate').value;
+    const endDate = document.getElementById('customEndDate').value;
+    
+    if (startDate && endDate && startDate > endDate) {
+        // Show warning or swap dates
+        document.getElementById('customEndDate').value = startDate;
+    }
+}
+
+function applyCustomDateRange() {
+    const startDate = document.getElementById('customStartDate').value;
+    const endDate = document.getElementById('customEndDate').value;
+    
+    if (!startDate || !endDate) {
+        showStatus('Lütfen başlangıç ve bitiş tarihlerini seçin.', 'error');
+        return;
+    }
+    
+    if (startDate > endDate) {
+        showStatus('Başlangıç tarihi bitiş tarihinden sonra olamaz.', 'error');
+        return;
+    }
+    
+    // Update the current period to custom and refresh the view
+    currentBudgetPeriod = 'custom';
+    customDateRange = { start: startDate, end: endDate };
+    
+    // Update active tab
+    document.querySelectorAll('.period-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.period === 'custom') {
+            tab.classList.add('active');
+        }
+    });
+    
+    hideCustomDateSelector();
+    updateBudgetOverview();
+}
+
+// Update budget overview
+async function updateBudgetOverview() {
+    console.log('🔍 Debug: updateBudgetOverview called');
+    console.log('🔍 Debug: userData:', userData);
+    console.log('🔍 Debug: userData.budget:', userData?.budget);
+    
+    if (!userData || !userData.budget) {
+        console.log('⚠️ Debug: userData or userData.budget is missing, returning early');
+        return;
+    }
+    
+    console.log('🔍 Debug: Calling updateOverviewCards...');
+    updateOverviewCards();
+    console.log('🔍 Debug: Calling updateTransactionsList...');
+    updateTransactionsList();
+    console.log('🔍 Debug: Calling updateCategoriesList...');
+    updateCategoriesList();
+    console.log('🔍 Debug: Calling updateGoalsList...');
+    updateGoalsList();
+    console.log('🔍 Debug: Calling updateCharts...');
+    updateCharts();
+    console.log('🔍 Debug: updateBudgetOverview completed');
+}
+
+// Update overview cards
+function updateOverviewCards() {
+    console.log('🔍 Debug: updateOverviewCards called');
+    
+    if (!userData || !userData.budget) {
+        console.log('⚠️ Debug: userData or userData.budget is missing, returning early');
+        return;
+    }
+    
+    const transactions = userData.budget.transactions || [];
+    console.log('🔍 Debug: All transactions:', transactions);
+    
+    // Calculate totals for current period only
+    let totalIncome = 0;
+    let totalExpense = 0;
+    
+    const currentPeriodTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const today = new Date();
+        
+        switch (currentBudgetPeriod) {
+            case 'daily':
+                return isSameDay(transactionDate, today);
+            case 'weekly':
+                return isSameWeek(transactionDate, today);
+            case 'monthly':
+                return isSameMonth(transactionDate, today);
+            case 'yearly':
+                return isSameYear(transactionDate, today);
+            case 'custom':
+                if (customDateRange && customDateRange.start && customDateRange.end) {
+                    const startDate = new Date(customDateRange.start);
+                    const endDate = new Date(customDateRange.end);
+                    return transactionDate >= startDate && transactionDate <= endDate;
+                }
+                return false;
+            default:
+                return false;
+        }
+    });
+    
+    console.log('🔍 Debug: Current period transactions for overview:', currentPeriodTransactions);
+    
+    currentPeriodTransactions.forEach(transaction => {
+        if (transaction.type === 'income') {
+            totalIncome += transaction.amount;
+        } else {
+            totalExpense += transaction.amount;
+        }
+    });
+    
+    const netBalance = totalIncome - totalExpense;
+    const remainingBudget = Math.max(0, netBalance);
+    
+    console.log('🔍 Debug: Overview calculations - income:', totalIncome, 'expense:', totalExpense, 'netBalance:', netBalance, 'remaining:', remainingBudget);
+    
+    // Calculate total net (all time)
+    const allTransactions = userData.budget.transactions || [];
+    let totalAllTimeIncome = 0;
+    let totalAllTimeExpense = 0;
+    
+    allTransactions.forEach(transaction => {
+        if (transaction.type === 'income') {
+            totalAllTimeIncome += transaction.amount;
+        } else {
+            totalAllTimeExpense += transaction.amount;
+        }
+    });
+    
+    const totalNet = totalAllTimeIncome - totalAllTimeExpense;
+    
+    console.log('🔍 Debug: Total all time calculations - income:', totalAllTimeIncome, 'expense:', totalAllTimeExpense, 'totalNet:', totalNet);
+    
+    // Update DOM elements
+    const totalIncomeElement = document.getElementById('totalIncome');
+    const totalExpenseElement = document.getElementById('totalExpense');
+    const netBalanceElement = document.getElementById('netBalance');
+    const totalNetElement = document.getElementById('totalNet');
+    
+    if (totalIncomeElement) totalIncomeElement.textContent = `${totalIncome.toFixed(2)} ₺`;
+    if (totalExpenseElement) totalExpenseElement.textContent = `${totalExpense.toFixed(2)} ₺`;
+    if (netBalanceElement) netBalanceElement.textContent = `${netBalance.toFixed(2)} ₺`;
+    if (totalNetElement) totalNetElement.textContent = `${totalNet.toFixed(2)} ₺`;
+    
+    // Add last updated timestamp
+    const lastUpdatedElement = document.getElementById('lastUpdated');
+    if (lastUpdatedElement) {
+        const now = new Date();
+        lastUpdatedElement.textContent = `Son Güncelleme: ${formatDateTime(now.toISOString())}`;
+    }
+    
+    console.log('🔍 Debug: Overview cards updated successfully');
+}
+
+// Update transactions list
+function updateTransactionsList() {
+    console.log('🔍 Debug: updateTransactionsList called');
+    console.log('🔍 Debug: userData:', userData);
+    console.log('🔍 Debug: userData.budget:', userData?.budget);
+    
+    if (!userData || !userData.budget) {
+        console.log('⚠️ Debug: userData or userData.budget is missing, returning early');
+        return;
+    }
+    
+    const transactionsList = document.getElementById('transactionsList');
+    console.log('🔍 Debug: transactionsList element:', transactionsList);
+    
+    if (!transactionsList) {
+        console.log('⚠️ Debug: transactionsList element not found, returning early');
+        return;
+    }
+    
+    const transactions = userData.budget.transactions || [];
+    const categories = userData.budget.categories || [];
+    
+    console.log('🔍 Debug: Transactions array:', transactions);
+    console.log('🔍 Debug: Transactions length:', transactions.length);
+    console.log('🔍 Debug: Categories array:', categories);
+    console.log('🔍 Debug: Categories length:', categories.length);
+    
+    // Filter transactions for current period
+    const currentPeriodTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const today = new Date();
+        
+        switch (currentBudgetPeriod) {
+            case 'daily':
+                return isSameDay(transactionDate, today);
+            case 'weekly':
+                return isSameWeek(transactionDate, today);
+            case 'monthly':
+                return isSameMonth(transactionDate, today);
+            case 'yearly':
+                return isSameYear(transactionDate, today);
+            case 'custom':
+                if (customDateRange && customDateRange.start && customDateRange.end) {
+                    const startDate = new Date(customDateRange.start);
+                    const endDate = new Date(customDateRange.end);
+                    return transactionDate >= startDate && transactionDate <= endDate;
+                }
+                return false;
+            default:
+                return false;
+        }
+    });
+    
+    // Sort transactions by date (newest first)
+    const sortedTransactions = currentPeriodTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Take only the latest 10 transactions
+    const recentTransactions = sortedTransactions.slice(0, 10);
+    
+    console.log('🔍 Debug: Recent transactions:', recentTransactions);
+    
+    let html = '';
+    
+    if (recentTransactions.length === 0) {
+        html = '<p style="color: #888; text-align: center; padding: 20px;">Henüz işlem bulunmuyor</p>';
+        console.log('🔍 Debug: No transactions, showing empty message');
+    } else {
+        console.log('🔍 Debug: Rendering transactions...');
+        recentTransactions.forEach(transaction => {
+            console.log('🔍 Debug: Processing transaction:', transaction);
+            const category = categories.find(cat => cat.id === transaction.categoryId);
+            const categoryName = category ? category.name : 'Bilinmeyen';
+            const categoryIcon = category ? category.icon : '💰';
+            
+            html += `
+                <div class="transaction-item">
+                    <div class="transaction-header">
+                        <span class="transaction-amount ${transaction.type}">
+                            ${transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)} ₺
+                        </span>
+                        <span class="transaction-category">${categoryIcon} ${categoryName}</span>
+                    </div>
+                    <div class="transaction-description">${transaction.description}</div>
+                    <div class="transaction-date">${formatDateTime(transaction.date)}</div>
+                    <div class="transaction-actions">
+                        <button class="btn-edit" onclick="editTransaction('${transaction.id}')">✏️</button>
+                        <button class="btn-delete" onclick="deleteTransaction('${transaction.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    console.log('🔍 Debug: Final HTML:', html);
+    transactionsList.innerHTML = html;
+    console.log('🔍 Debug: Transactions list updated in DOM');
+}
+
+// Update categories list
+function updateCategoriesList() {
+    console.log('🔍 Debug: updateCategoriesList called');
+    console.log('🔍 Debug: userData:', userData);
+    console.log('🔍 Debug: userData.budget:', userData?.budget);
+    
+    if (!userData || !userData.budget) {
+        console.log('⚠️ Debug: userData or userData.budget is missing, returning early');
+        return;
+    }
+    
+    const categoriesList = document.getElementById('categoriesList');
+    console.log('🔍 Debug: categoriesList element:', categoriesList);
+    
+    if (!categoriesList) {
+        console.log('⚠️ Debug: categoriesList element not found, returning early');
+        return;
+    }
+    
+    const categories = userData.budget.categories || [];
+    console.log('🔍 Debug: Categories array:', categories);
+    console.log('🔍 Debug: Categories length:', categories.length);
+    
+    let html = '';
+    
+    if (categories.length === 0) {
+        html = '<p style="color: #888; text-align: center; padding: 20px;">Henüz kategori bulunmuyor</p>';
+        console.log('🔍 Debug: No categories, showing empty message');
+    } else {
+        console.log('🔍 Debug: Rendering categories...');
+        categories.forEach(category => {
+            console.log('🔍 Debug: Processing category:', category);
+            html += `
+                <div class="category-item">
+                    <div class="category-info">
+                        <span class="category-icon">${category.icon}</span>
+                        <div class="category-details">
+                            <h4>${category.name}</h4>
+                            <div class="category-type">${category.type === 'income' ? 'Gelir' : 'Gider'}</div>
+                            ${category.createdAt ? `<div class="category-created">Oluşturulma: ${formatDateTime(category.createdAt)}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-edit" onclick="editCategory('${category.id}')">✏️</button>
+                        <button class="btn-delete" onclick="deleteCategory('${category.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    console.log('🔍 Debug: Final HTML:', html);
+    categoriesList.innerHTML = html;
+    console.log('🔍 Debug: Categories list updated in DOM');
+}
+
+// Update goals list
+function updateGoalsList() {
+    console.log('🔍 Debug: updateGoalsList called');
+    console.log('🔍 Debug: userData:', userData);
+    console.log('🔍 Debug: userData.budget:', userData?.budget);
+    
+    if (!userData || !userData.budget) {
+        console.log('⚠️ Debug: userData or userData.budget is missing, returning early');
+        return;
+    }
+    
+    const goalsList = document.getElementById('goalsList');
+    console.log('🔍 Debug: goalsList element:', goalsList);
+    
+    if (!goalsList) {
+        console.log('⚠️ Debug: goalsList element not found, returning early');
+        return;
+    }
+    
+    const goals = userData.budget.goals || [];
+    console.log('🔍 Debug: Goals array:', goals);
+    console.log('🔍 Debug: Goals length:', goals.length);
+    
+    let html = '';
+    
+    if (goals.length === 0) {
+        html = '<p style="color: #888; text-align: center; padding: 20px;">Henüz hedef bulunmuyor</p>';
+        console.log('🔍 Debug: No goals, showing empty message');
+    } else {
+        console.log('🔍 Debug: Rendering goals...');
+        goals.forEach(goal => {
+            console.log('🔍 Debug: Processing goal:', goal);
+            const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
+            
+            html += `
+                <div class="goal-item">
+                    <div class="goal-header">
+                        <span class="goal-name">${goal.name}</span>
+                        <span class="goal-priority ${goal.priority}">${goal.priority}</span>
+                    </div>
+                    <div class="goal-amounts">
+                        <span>Mevcut: ${goal.currentAmount.toFixed(2)} ₺</span>
+                        <span>Hedef: ${goal.targetAmount.toFixed(2)} ₺</span>
+                    </div>
+                    <div class="goal-progress">
+                        <div class="goal-progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                    </div>
+                    <div class="goal-deadline">Hedef Tarih: ${formatDateTime(goal.deadline)}</div>
+                    <div class="goal-actions">
+                        <button class="btn-goal-deposit" onclick="showGoalTransactionModal('${goal.id}', 'deposit')" title="Para Yatır">💰</button>
+                        <button class="btn-goal-withdraw" onclick="showGoalTransactionModal('${goal.id}', 'withdraw')" title="Para Çek">💸</button>
+                        <button class="btn-edit" onclick="editGoal('${goal.id}')">✏️</button>
+                        <button class="btn-delete" onclick="deleteGoal('${goal.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    console.log('🔍 Debug: Final HTML:', html);
+    goalsList.innerHTML = html;
+    console.log('🔍 Debug: Goals list updated in DOM');
+}
+
+// Initialize and update charts
+function initializeCharts() {
+    console.log('🔍 Debug: initializeCharts called');
+    const chartCanvas = document.getElementById('budgetChart');
+    console.log('🔍 Debug: chartCanvas found:', !!chartCanvas);
+    if (!chartCanvas) {
+        console.error('❌ Debug: budgetChart canvas not found!');
+        return;
+    }
+    
+    const ctx = chartCanvas.getContext('2d');
+    console.log('🔍 Debug: canvas context:', !!ctx);
+    console.log('🔍 Debug: Chart.js available:', typeof Chart !== 'undefined');
+    
+    if (typeof Chart === 'undefined') {
+        console.error('❌ Debug: Chart.js not loaded!');
+        return;
+    }
+    
+    budgetChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Gelir', 'Gider'],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ['#51cf66', '#ff6b6b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#b8c5d6',
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log('✅ Debug: budgetChart created successfully:', !!budgetChart);
+}
+
+// Update charts
+function updateCharts() {
+    console.log('🔍 Debug: updateCharts called');
+    console.log('🔍 Debug: budgetChart:', budgetChart);
+    console.log('🔍 Debug: userData:', userData);
+    console.log('🔍 Debug: userData.budget:', userData?.budget);
+    
+    if (!budgetChart || !userData || !userData.budget) {
+        console.log('⚠️ Debug: Missing required data for chart update, returning early');
+        return;
+    }
+    
+    console.log('🔍 Debug: currentBudgetPeriod:', currentBudgetPeriod);
+    
+    // Calculate actual spent and remaining based on CURRENT PERIOD transactions
+    const transactions = userData.budget.transactions || [];
+    
+    console.log('🔍 Debug: All transactions:', transactions);
+    
+    let totalSpent = 0;
+    let totalIncome = 0;
+    
+    // Filter transactions based on current period
+    const currentPeriodTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const today = new Date();
+        
+        switch (currentBudgetPeriod) {
+            case 'daily':
+                return isSameDay(transactionDate, today);
+            case 'weekly':
+                return isSameWeek(transactionDate, today);
+            case 'monthly':
+                return isSameMonth(transactionDate, today);
+            case 'yearly':
+                return isSameYear(transactionDate, today);
+            case 'custom':
+                if (customDateRange && customDateRange.start && customDateRange.end) {
+                    const startDate = new Date(customDateRange.start);
+                    const endDate = new Date(customDateRange.end);
+                    return transactionDate >= startDate && transactionDate <= endDate;
+                }
+                return false;
+            default:
+                return false;
+        }
+    });
+    
+    console.log('🔍 Debug: Current period transactions for chart:', currentPeriodTransactions);
+    
+    // Use only current period transactions for the chart
+    currentPeriodTransactions.forEach(transaction => {
+        if (transaction.type === 'expense') {
+            totalSpent += transaction.amount;
+        } else if (transaction.type === 'income') {
+            totalIncome += transaction.amount;
+        }
+    });
+    
+    const netBalance = totalIncome - totalSpent;
+    const remainingBudget = Math.max(0, netBalance);
+    
+    console.log('🔍 Debug: Chart calculations - spent:', totalSpent, 'income:', totalIncome, 'netBalance:', netBalance, 'remaining:', remainingBudget);
+    
+    // Update chart data
+    if (totalSpent > 0 || totalIncome > 0) {
+        // Show income vs expense for better visualization
+        budgetChart.data.datasets[0].data = [totalIncome, totalSpent];
+        
+        // Update chart labels based on current period
+        let periodLabel = '';
+        switch (currentBudgetPeriod) {
+            case 'daily':
+                periodLabel = 'Bugün';
+                break;
+            case 'weekly':
+                periodLabel = 'Bu Hafta';
+                break;
+            case 'monthly':
+                periodLabel = 'Bu Ay';
+                break;
+            case 'yearly':
+                periodLabel = 'Bu Yıl';
+                break;
+            case 'custom':
+                periodLabel = 'Seçilen Tarih';
+                break;
+            default:
+                periodLabel = '';
+        }
+        
+        budgetChart.data.labels = [`${periodLabel} Gelir`, `${periodLabel} Gider`];
+        
+        // Update chart colors based on data
+        budgetChart.data.datasets[0].backgroundColor = ['#51cf66', '#ff6b6b']; // Green for income, Red for expense
+        
+        budgetChart.update();
+        
+        // Update chart title based on current period
+        const chartTitle = document.querySelector('.chart-container h3');
+        if (chartTitle) {
+            chartTitle.textContent = `${periodLabel} Bütçe İlerlemesi`;
+        }
+        
+        console.log('🔍 Debug: Chart updated successfully with new data for period:', currentBudgetPeriod);
+    } else {
+        // If no transactions, show empty state with period-specific labels
+        let periodLabel = '';
+        switch (currentBudgetPeriod) {
+            case 'daily':
+                periodLabel = 'Bugün';
+                break;
+            case 'weekly':
+                periodLabel = 'Bu Hafta';
+                break;
+            case 'monthly':
+                periodLabel = 'Bu Ay';
+                break;
+            case 'yearly':
+                periodLabel = 'Bu Yıl';
+                break;
+            case 'custom':
+                periodLabel = 'Seçilen Tarih';
+                break;
+            default:
+                periodLabel = '';
+        }
+        
+        budgetChart.data.datasets[0].data = [0, 0];
+        budgetChart.data.labels = [`${periodLabel} Gelir`, `${periodLabel} Gider`];
+        budgetChart.data.datasets[0].backgroundColor = ['#51cf66', '#ff6b6b'];
+        
+        // Update chart title for empty state
+        const chartTitle = document.querySelector('.chart-container h3');
+        if (chartTitle) {
+            chartTitle.textContent = `${periodLabel} Bütçe İlerlemesi`;
+        }
+        
+        budgetChart.update();
+        console.log('🔍 Debug: Chart updated with empty state for period:', currentBudgetPeriod);
+    }
+}
+
+// Show add transaction modal
+function showAddTransactionModal() {
+    const modal = document.getElementById('addTransactionModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        loadCategoriesForTransaction();
+        setDefaultDate();
+        
+        // Focus on the first input field after modal opens
+        setTimeout(() => {
+            const firstInput = modal.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 100);
+    }
+}
+
+// Show add category modal
+function showAddCategoryModal() {
+    const modal = document.getElementById('addCategoryModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        
+        // Focus on the first input field after modal opens
+        setTimeout(() => {
+            const firstInput = modal.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 100);
+    }
+}
+
+// Show add goal modal
+function showAddGoalModal() {
+    const modal = document.getElementById('addGoalModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        setDefaultGoalDate();
+        
+        // Focus on the first input field after modal opens
+        setTimeout(() => {
+            const firstInput = modal.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 100);
+    }
+}
+
+// Load categories for transaction modal
+function loadCategoriesForTransaction() {
+    if (!userData || !userData.budget) return;
+    
+    const categorySelect = document.getElementById('transactionCategory');
+    if (!categorySelect) return;
+    
+    const categories = userData.budget.categories || [];
+    
+    categorySelect.innerHTML = '<option value="">Kategori Seçin</option>';
+    
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = `${category.icon} ${category.name}`;
+        categorySelect.appendChild(option);
+    });
+}
+
+// Set default date and time for transaction
+function setDefaultDate() {
+    const dateTimeInput = document.getElementById('transactionDateTime');
+    
+    if (dateTimeInput) {
+        const now = new Date();
+        
+        // Format datetime-local input value (YYYY-MM-DDTHH:MM)
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const dateTimeValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+        dateTimeInput.value = dateTimeValue;
+        
+        console.log('🕐 Debug: Default datetime set:', dateTimeValue);
+    }
+}
+
+// Set default goal date and time
+function setDefaultGoalDate() {
+    const dateTimeInput = document.getElementById('goalDeadline');
+    
+    if (dateTimeInput) {
+        const nextYear = new Date();
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        
+        // Set next year date with end of day time (23:59)
+        const year = nextYear.getFullYear();
+        const month = String(nextYear.getMonth() + 1).padStart(2, '0');
+        const day = String(nextYear.getDate()).padStart(2, '0');
+        
+        const dateTimeValue = `${year}-${month}-${day}T23:59`;
+        dateTimeInput.value = dateTimeValue;
+        
+        console.log('🕐 Debug: Default goal datetime set:', dateTimeValue);
+    }
+}
+
+// Add or edit transaction
+async function addTransaction(formData) {
+    try {
+        const form = document.getElementById('addTransactionForm');
+        const editId = form.getAttribute('data-edit-id');
+        
+        if (editId) {
+            // Edit existing transaction
+            const transactionIndex = userData.budget.transactions.findIndex(t => t.id === editId);
+            if (transactionIndex !== -1) {
+                userData.budget.transactions[transactionIndex] = {
+                    ...userData.budget.transactions[transactionIndex],
+                    type: formData.get('transactionType'),
+                    categoryId: formData.get('transactionCategory'),
+                    amount: parseFloat(formData.get('transactionAmount')),
+                    description: formData.get('transactionDescription'),
+                    date: formData.get('transactionDateTime'),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                console.log('✅ Transaction updated successfully');
+                showStatus('İşlem başarıyla güncellendi', 'success');
+            }
+        } else {
+            // Add new transaction
+            const transaction = {
+                id: 'trans_' + Date.now(),
+                type: formData.get('transactionType'),
+                categoryId: formData.get('transactionCategory'),
+                amount: parseFloat(formData.get('transactionAmount')),
+                description: formData.get('transactionDescription'),
+                date: formData.get('transactionDateTime'),
+                createdAt: new Date().toISOString()
+            };
+            
+            if (!userData.budget.transactions) {
+                userData.budget.transactions = [];
+            }
+            
+            userData.budget.transactions.push(transaction);
+            
+            // Update period data
+            await updatePeriodData(transaction);
+            
+            console.log('✅ Transaction added successfully');
+            showStatus('İşlem başarıyla eklendi', 'success');
+        }
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        // Update UI
+        updateBudgetOverview();
+        
+        // Close modal and reset form
+        closeModal('addTransactionModal');
+        form.removeAttribute('data-edit-id');
+        form.reset();
+        
+        // Reset button text
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.textContent = 'İşlem Ekle';
+        }
+        
+    } catch (error) {
+        console.error('❌ Error adding/updating transaction:', error);
+        showStatus('İşlem eklenirken/güncellenirken hata oluştu', 'error');
+    }
+}
+
+// Add or edit category
+async function addCategory(formData) {
+    try {
+        const form = document.getElementById('addCategoryForm');
+        const editId = form.getAttribute('data-edit-id');
+        
+        if (editId) {
+            // Edit existing category
+            const categoryIndex = userData.budget.categories.findIndex(c => c.id === editId);
+            if (categoryIndex !== -1) {
+                userData.budget.categories[categoryIndex] = {
+                    ...userData.budget.categories[categoryIndex],
+                    name: formData.get('categoryName'),
+                    type: formData.get('categoryType'),
+                    color: formData.get('categoryColor'),
+                    icon: formData.get('categoryIcon'),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                console.log('✅ Category updated successfully');
+                showStatus('Kategori başarıyla güncellendi', 'success');
+            }
+        } else {
+            // Add new category
+            const category = {
+                id: 'cat_' + Date.now(),
+                name: formData.get('categoryName'),
+                type: formData.get('categoryType'),
+                color: formData.get('categoryColor'),
+                icon: formData.get('categoryIcon'),
+                createdAt: new Date().toISOString()
+            };
+            
+            if (!userData.budget.categories) {
+                userData.budget.categories = [];
+            }
+            
+            userData.budget.categories.push(category);
+            
+            console.log('✅ Category added successfully');
+            showStatus('Kategori başarıyla eklendi', 'success');
+        }
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        // Update UI
+        updateBudgetOverview();
+        
+        // Close modal and reset form
+        closeModal('addCategoryModal');
+        form.removeAttribute('data-edit-id');
+        form.reset();
+        
+        // Reset button text
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.textContent = 'Kategori Ekle';
+        }
+        
+    } catch (error) {
+        console.error('❌ Error adding/updating category:', error);
+        showStatus('Kategori eklenirken/güncellenirken hata oluştu', 'error');
+    }
+}
+
+// Add or edit goal
+async function addGoal(formData) {
+    try {
+        const form = document.getElementById('addGoalForm');
+        const editId = form.getAttribute('data-edit-id');
+        
+        if (editId) {
+            // Edit existing goal
+            const goalIndex = userData.budget.goals.findIndex(g => g.id === editId);
+            if (goalIndex !== -1) {
+                userData.budget.goals[goalIndex] = {
+                    ...userData.budget.goals[goalIndex],
+                    name: formData.get('goalName'),
+                    targetAmount: parseFloat(formData.get('goalTargetAmount')),
+                    currentAmount: parseFloat(formData.get('goalCurrentAmount')),
+                    deadline: formData.get('goalDeadline'),
+                    priority: formData.get('goalPriority'),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                console.log('✅ Goal updated successfully');
+                showStatus('Hedef başarıyla güncellendi', 'success');
+            }
+        } else {
+            // Add new goal
+            const goal = {
+                id: 'goal_' + Date.now(),
+                name: formData.get('goalName'),
+                targetAmount: parseFloat(formData.get('goalTargetAmount')),
+                currentAmount: parseFloat(formData.get('goalCurrentAmount')),
+                deadline: formData.get('goalDeadline'),
+                priority: formData.get('goalPriority'),
+                createdAt: new Date().toISOString()
+            };
+            
+            if (!userData.budget.goals) {
+                userData.budget.goals = [];
+            }
+            
+            userData.budget.goals.push(goal);
+            
+            console.log('✅ Goal added successfully');
+            showStatus('Hedef başarıyla eklendi', 'success');
+        }
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        // Update UI
+        updateBudgetOverview();
+        
+        // Close modal and reset form
+        closeModal('addGoalModal');
+        form.removeAttribute('data-edit-id');
+        form.reset();
+        
+        // Reset button text
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.textContent = 'Hedef Ekle';
+        }
+        
+    } catch (error) {
+        console.error('❌ Error adding/updating goal:', error);
+        showStatus('Hedef eklenirken/güncellenirken hata oluştu', 'error');
+    }
+}
+
+// Update period data when transaction is added
+async function updatePeriodData(transaction) {
+    if (!userData.budget.periods) return;
+    
+    const periods = userData.budget.periods;
+    const transactionDate = new Date(transaction.date);
+    const today = new Date();
+    
+    // Update daily period
+    if (isSameDay(transactionDate, today)) {
+        if (transaction.type === 'expense') {
+            periods.daily.spent += transaction.amount;
+            periods.daily.remaining -= transaction.amount;
+        } else {
+            periods.daily.budget += transaction.amount;
+            periods.daily.remaining += transaction.amount;
+        }
+    }
+    
+    // Update weekly period
+    if (isSameWeek(transactionDate, today)) {
+        if (transaction.type === 'expense') {
+            periods.weekly.spent += transaction.amount;
+            periods.weekly.remaining -= transaction.amount;
+        } else {
+            periods.weekly.budget += transaction.amount;
+            periods.weekly.remaining += transaction.amount;
+        }
+    }
+    
+    // Update monthly period
+    if (isSameMonth(transactionDate, today)) {
+        if (transaction.type === 'expense') {
+            periods.monthly.spent += transaction.amount;
+            periods.monthly.remaining -= transaction.amount;
+        } else {
+            periods.monthly.budget += transaction.amount;
+            periods.monthly.remaining += transaction.amount;
+        }
+    }
+    
+    // Update yearly period
+    if (isSameYear(transactionDate, today)) {
+        if (transaction.type === 'expense') {
+            periods.yearly.spent += transaction.amount;
+            periods.yearly.remaining -= transaction.amount;
+        } else {
+            periods.yearly.budget += transaction.amount;
+            periods.yearly.remaining += transaction.amount;
+        }
+    }
+}
+
+// Utility functions for date comparison
+function isSameDay(date1, date2) {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+}
+
+function isSameWeek(date1, date2) {
+    const d1 = new Date(date1.getTime());
+    const d2 = new Date(date2.getTime());
+    d1.setHours(0, 0, 0, 0);
+    d2.setHours(0, 0, 0, 0);
+    
+    const oneDay = 24 * 60 * 60 * 1000;
+    const diffTime = Math.abs(d2 - d1);
+    const diffDays = Math.ceil(diffTime / oneDay);
+    
+    return diffDays <= 7;
+}
+
+function isSameMonth(date1, date2) {
+    return date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+}
+
+function isSameYear(date1, date2) {
+    return date1.getFullYear() === date2.getFullYear();
+}
+
+// Format date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Format date and time for display
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    const dateStr = date.toLocaleDateString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const timeStr = date.toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    return `${dateStr} - ${timeStr}`;
+}
+
+// Setup budget form event listeners
+function setupBudgetFormListeners() {
+    // Transaction form
+    const transactionForm = document.getElementById('addTransactionForm');
+    if (transactionForm) {
+        transactionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(transactionForm);
+            addTransaction(formData);
+        });
+    }
+    
+    // Category form
+    const categoryForm = document.getElementById('addCategoryForm');
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(categoryForm);
+            addCategory(formData);
+        });
+    }
+    
+    // Goal form
+    const goalForm = document.getElementById('addGoalForm');
+    if (goalForm) {
+        goalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(goalForm);
+            addGoal(formData);
+        });
+    }
+    
+    // Goal transaction form
+    const goalTransactionForm = document.getElementById('goalTransactionForm');
+    if (goalTransactionForm) {
+        goalTransactionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(goalTransactionForm);
+            handleGoalTransaction(formData);
+        });
+    }
+}
+
+// Make functions globally available
+window.switchBudgetPeriod = switchBudgetPeriod;
+window.showAddTransactionModal = showAddTransactionModal;
+window.showAddCategoryModal = showAddCategoryModal;
+window.showAddGoalModal = showAddGoalModal;
+window.showCustomDateSelector = showCustomDateSelector;
+window.hideCustomDateSelector = hideCustomDateSelector;
+window.updateCustomDateRange = updateCustomDateRange;
+window.applyCustomDateRange = applyCustomDateRange;
+
+// Make essential UI functions globally available
+window.closeModal = closeModal;
+window.showSection = showSection;
+window.filterTasks = filterTasks;
+window.showAddTaskModal = showAddTaskModal;
+window.showAddProjectModal = showAddProjectModal;
+window.showAddDailyTaskModal = showAddDailyTaskModal;
+
+// Icon selection function for category modal
+function selectIcon(icon) {
+    // Remove selected class from all options
+    document.querySelectorAll('.icon-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    event.target.classList.add('selected');
+    
+    // Update the input field
+    document.getElementById('categoryIcon').value = icon;
+}
+
+// Make icon selection function globally available
+window.selectIcon = selectIcon;
+
+
+// Cleanup function for budget real-time listeners
+function cleanupBudgetListeners() {
+    if (window.budgetUnsubscribe) {
+        window.budgetUnsubscribe();
+        window.budgetUnsubscribe = null;
+        console.log('🧹 Budget real-time listeners cleaned up');
+    }
+}
+
+// Make cleanup function globally available
+window.cleanupBudgetListeners = cleanupBudgetListeners;
+
+// Edit Transaction
+async function editTransaction(transactionId) {
+    const transaction = userData.budget.transactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+    
+    // Pre-fill modal with existing data
+    document.getElementById('transactionType').value = transaction.type;
+    document.getElementById('transactionCategory').value = transaction.categoryId;
+    document.getElementById('transactionAmount').value = transaction.amount;
+    document.getElementById('transactionDescription').value = transaction.description;
+    
+    // Convert date string to datetime-local format
+    if (transaction.date) {
+        const date = new Date(transaction.date);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const dateTimeValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('transactionDateTime').value = dateTimeValue;
+    }
+    
+            // Show modal
+        const modal = document.getElementById('addTransactionModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            loadCategoriesForTransaction();
+            
+            // Change form to edit mode
+            const form = document.getElementById('addTransactionForm');
+            form.setAttribute('data-edit-id', transactionId);
+            
+            // Change button text
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.textContent = 'İşlemi Güncelle';
+            }
+        }
+}
+
+// Delete Transaction
+async function deleteTransaction(transactionId) {
+    if (!confirm('Bu işlemi silmek istediğinizden emin misiniz?')) return;
+    
+    try {
+        // Remove transaction from array
+        userData.budget.transactions = userData.budget.transactions.filter(t => t.id !== transactionId);
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        console.log('✅ Transaction deleted successfully');
+        showStatus('İşlem başarıyla silindi', 'success');
+        
+        // Update UI
+        updateBudgetOverview();
+        
+    } catch (error) {
+        console.error('❌ Error deleting transaction:', error);
+        showStatus('İşlem silinirken hata oluştu', 'error');
+    }
+}
+
+// Edit Category
+async function editCategory(categoryId) {
+    const category = userData.budget.categories.find(c => c.id === categoryId);
+    if (!category) return;
+    
+    // Pre-fill modal with existing data
+    document.getElementById('categoryName').value = category.name;
+    document.getElementById('categoryType').value = category.type;
+    document.getElementById('categoryColor').value = category.color;
+    document.getElementById('categoryIcon').value = category.icon;
+    
+    // Update icon selection
+    document.querySelectorAll('.icon-option').forEach(option => {
+        option.classList.remove('selected');
+        if (option.dataset.icon === category.icon) {
+            option.classList.add('selected');
+        }
+    });
+    
+            // Show modal
+        const modal = document.getElementById('addCategoryModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            
+            // Change form to edit mode
+            const form = document.getElementById('addCategoryForm');
+            form.setAttribute('data-edit-id', categoryId);
+            
+            // Change button text
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.textContent = 'Kategoriyi Güncelle';
+            }
+        }
+}
+
+// Delete Category
+async function deleteCategory(categoryId) {
+    if (!confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) return;
+    
+    try {
+        // Remove category from array
+        userData.budget.categories = userData.budget.categories.filter(c => c.id !== categoryId);
+        
+        // Also remove any transactions with this category
+        userData.budget.transactions = userData.budget.transactions.filter(t => t.categoryId !== categoryId);
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        console.log('✅ Category deleted successfully');
+        showStatus('Kategori başarıyla silindi', 'success');
+        
+        // Update UI
+        updateBudgetOverview();
+        
+    } catch (error) {
+        console.error('❌ Error deleting category:', error);
+        showStatus('Kategori silinirken hata oluştu', 'error');
+    }
+}
+
+// Edit Goal
+async function editGoal(goalId) {
+    const goal = userData.budget.goals.find(g => g.id === goalId);
+    if (!goal) return;
+    
+    // Pre-fill modal with existing data
+    document.getElementById('goalName').value = goal.name;
+    document.getElementById('goalTargetAmount').value = goal.targetAmount;
+    document.getElementById('goalCurrentAmount').value = goal.currentAmount;
+    
+    // Convert deadline string to datetime-local format
+    if (goal.deadline) {
+        const date = new Date(goal.deadline);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const dateTimeValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('goalDeadline').value = dateTimeValue;
+    }
+    
+    document.getElementById('goalPriority').value = goal.priority;
+    
+            // Show modal
+        const modal = document.getElementById('addGoalModal');
+        if (modal) {
+            modal.style.display = 'flex';
+    setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            
+            // Change form to edit mode
+            const form = document.getElementById('addGoalForm');
+            form.setAttribute('data-edit-id', goalId);
+            
+            // Change button text
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.textContent = 'Hedefi Güncelle';
+            }
+        }
+}
+
+// Delete Goal
+async function deleteGoal(goalId) {
+    if (!confirm('Bu hedefi silmek istediğinizden emin misiniz?')) return;
+    
+    try {
+        // Remove goal from array
+        userData.budget.goals = userData.budget.goals.filter(g => g.id !== goalId);
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        console.log('✅ Goal deleted successfully');
+        showStatus('Hedef başarıyla silindi', 'success');
+        
+        // Update UI
+        updateBudgetOverview();
+        
+    } catch (error) {
+        console.error('❌ Error deleting goal:', error);
+        showStatus('Hedef silinirken hata oluştu', 'error');
+    }
+}
+
+// Show goal transaction modal
+function showGoalTransactionModal(goalId, transactionType) {
+    const goal = userData.budget.goals.find(g => g.id === goalId);
+    if (!goal) return;
+    
+    const modal = document.getElementById('goalTransactionModal');
+    const title = document.getElementById('goalTransactionTitle');
+    const submitButton = document.getElementById('goalTransactionSubmit');
+    
+    if (modal && title && submitButton) {
+        // Set modal title and button text based on transaction type
+        if (transactionType === 'deposit') {
+            title.textContent = `${goal.name} - Para Yatır`;
+            submitButton.textContent = 'Para Yatır';
+            submitButton.style.background = 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)';
+        } else {
+            title.textContent = `${goal.name} - Para Çek`;
+            submitButton.textContent = 'Para Çek';
+            submitButton.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+        }
+        
+        // Store goal ID and transaction type for form submission
+        const form = document.getElementById('goalTransactionForm');
+        form.setAttribute('data-goal-id', goalId);
+        form.setAttribute('data-transaction-type', transactionType);
+        
+        // Show modal
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+}
+
+// Handle goal transaction
+async function handleGoalTransaction(formData) {
+    try {
+        const form = document.getElementById('goalTransactionForm');
+        const goalId = form.getAttribute('data-goal-id');
+        const transactionType = form.getAttribute('data-transaction-type');
+        const amount = parseFloat(formData.get('goalTransactionAmount'));
+        const description = formData.get('goalTransactionDescription');
+        
+        console.log('🔍 Debug: Goal transaction - goalId:', goalId, 'type:', transactionType, 'amount:', amount);
+        
+        // Find the goal
+        const goalIndex = userData.budget.goals.findIndex(g => g.id === goalId);
+        if (goalIndex === -1) {
+            console.error('❌ Goal not found:', goalId);
+            return;
+        }
+        
+        const goal = userData.budget.goals[goalIndex];
+        
+        // Update goal's current amount
+        if (transactionType === 'deposit') {
+            goal.currentAmount += amount;
+            console.log('✅ Deposited', amount, 'to goal. New amount:', goal.currentAmount);
+        } else if (transactionType === 'withdraw') {
+            if (goal.currentAmount >= amount) {
+                goal.currentAmount -= amount;
+                console.log('✅ Withdrew', amount, 'from goal. New amount:', goal.currentAmount);
+            } else {
+                showStatus('Yetersiz bakiye! Hedeften çekilebilecek miktar: ' + goal.currentAmount.toFixed(2) + ' ₺', 'error');
+                return;
+            }
+        }
+        
+        // Create a transaction record for tracking
+        const transaction = {
+            id: 'goal_trans_' + Date.now(),
+            type: transactionType === 'deposit' ? 'expense' : 'income', // Reverse because it's moving money to/from goal
+            categoryId: null,
+            amount: amount,
+            description: `${transactionType === 'deposit' ? 'Hedef yatırımı' : 'Hedef çekimi'}: ${goal.name} - ${description}`,
+            date: new Date().toISOString().split('T')[0],
+            goalId: goalId,
+            goalTransaction: true,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Add transaction to budget
+        if (!userData.budget.transactions) {
+            userData.budget.transactions = [];
+        }
+        userData.budget.transactions.push(transaction);
+        
+        // Save to Firestore
+        await db.collection('user_data').doc(currentUser.uid).set(userData, { merge: true });
+        
+        console.log('✅ Goal transaction completed successfully');
+        showStatus(`${transactionType === 'deposit' ? 'Para yatırma' : 'Para çekme'} işlemi başarıyla tamamlandı`, 'success');
+        
+        // Update UI
+        updateBudgetOverview();
+        
+        // Close modal and reset form
+        closeModal('goalTransactionModal');
+        form.removeAttribute('data-goal-id');
+        form.removeAttribute('data-transaction-type');
+        form.reset();
+        
+    } catch (error) {
+        console.error('❌ Error in goal transaction:', error);
+        showStatus('İşlem sırasında hata oluştu', 'error');
+    }
+}
+
+// Make edit and delete functions globally available
+window.editTransaction = editTransaction;
+window.deleteTransaction = deleteTransaction;
+window.editCategory = editCategory;
+window.deleteCategory = deleteCategory;
+window.editGoal = editGoal;
+window.deleteGoal = deleteGoal;
+window.showGoalTransactionModal = showGoalTransactionModal;
 
 

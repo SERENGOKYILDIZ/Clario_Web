@@ -48,6 +48,16 @@ A modern and user-friendly project and task management application. Powered by F
 - Real-time updates and synchronization
 - Multi-language support for all note content
 
+### 💰 **Budget Tracking**
+- Comprehensive expense and income tracking
+- Custom categories with icons and colors
+- Budget goals with deadlines and priorities
+- Visual charts and statistics with Chart.js
+- Date range filtering and period analysis
+- Real-time balance calculations
+- Transaction management (add, edit, delete)
+- Monthly/yearly period tracking
+
 ### 🎨 **Modern UI/UX**
 - Responsive design
 - Dark theme
@@ -72,6 +82,7 @@ A modern and user-friendly project and task management application. Powered by F
 - **Authentication**: Firebase Auth
 - **Hosting**: Firebase Hosting (recommended)
 - **Database**: NoSQL (Firestore)
+- **Charts**: Chart.js for budget visualizations
 - **Drag & Drop**: HTML5 Drag & Drop API
 - **Responsive Design**: CSS Grid, Flexbox, Media Queries
 - **Performance**: CSS animations, JavaScript optimizations
@@ -97,6 +108,14 @@ A modern and user-friendly project and task management application. Powered by F
 ## 📝 Recent Updates
 
 ### **Latest Features (Current Version)**
+- ✅ **💰 Budget Tracking System**: Complete expense and income management with visual charts
+- ✅ **📊 Budget Categories**: Custom categories with icons and colors for better organization
+- ✅ **🎯 Budget Goals**: Set financial goals with deadlines and priority tracking
+- ✅ **📈 Visual Analytics**: Chart.js integration for budget visualization and statistics
+- ✅ **📅 Date Range Filtering**: Filter transactions and view data for specific periods
+- ✅ **⚡ Real-time Updates**: Instant UI updates for all budget operations
+- ✅ **🔄 Smart Task Date Management**: Automatic date population and range support
+- ✅ **📱 Progressive Loading**: Loading screen with status updates during app initialization
 - ✅ **🌍 Multi-Language Support**: Complete internationalization with 5 languages (TR, EN, DE, ES, FR)
 - ✅ **🔤 Language Switcher**: Dynamic language switching without page reload
 - ✅ **📝 Localized Content**: All UI elements, modals, and forms in multiple languages
@@ -108,7 +127,6 @@ A modern and user-friendly project and task management application. Powered by F
 - ✅ **🎯 Enhanced Drag & Drop**: Smooth drag & drop reordering for all card types (notes, tasks, projects, daily tasks)
 - ✅ **⚡ Performance Optimized**: DOM manipulation instead of full re-renders for smooth animations
 - ✅ **🔄 Complete CRUD Operations**: Full edit functionality for all content types
-- ✅ **📱 Loading Screen**: i18n-ready loading screen before main app display
 - ✅ **🎨 Smooth Animations**: Visual feedback during drag operations with CSS transitions
 - ✅ **Advanced Date Management**: Support for single dates and date ranges with dd-mm-yyyy format
 - ✅ **Daily Task System**: Recurring tasks with completion tracking and streak calculation
@@ -498,6 +516,18 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 - Open source community
 
 ## 📋 Changelog
+
+### **v2.5.0** - Budget Tracking & Task Management Enhancement
+- 💰 **Budget Tracking System**: Complete expense and income management with visual charts
+- 📊 **Budget Categories**: Custom categories with icons and colors for better organization
+- 🎯 **Budget Goals**: Set financial goals with deadlines and priority tracking
+- 📈 **Visual Analytics**: Chart.js integration for budget visualization and statistics
+- 📅 **Date Range Filtering**: Filter transactions and view data for specific periods
+- ⚡ **Real-time Updates**: Instant UI updates for all budget operations
+- 🔄 **Smart Task Date Management**: Automatic date population and range support
+- 📱 **Progressive Loading**: Loading screen with status updates during app initialization
+- 🔧 **Authentication Flow**: Streamlined login/logout with single entry point (index.html)
+- 🎨 **UI Improvements**: Better task date display and modal animations
 
 ### **v2.4.0** - Multi-Language Support & Internationalization
 - 🌍 **Complete Multi-Language Support**: Added support for 5 languages (TR, EN, DE, ES, FR)
