@@ -1,4 +1,4 @@
-﻿// Clario Advanced Planning Application
+﻿﻿﻿﻿﻿﻿// Clario Advanced Planning Application
 // Based on Taslak.json data structure
 
 // Global variables
@@ -1398,14 +1398,31 @@ function createDailyTaskCard(dailyTask) {
     dailyTaskCard.addEventListener('dragstart', (e) => handleDragStart(e, dailyTaskCard, 'dailyTasks', dailyTask.id));
     dailyTaskCard.addEventListener('dragend', (e) => handleDragEnd(e, dailyTaskCard));
     
-    const isCompletedToday = dailyTask.progress.completedDates.includes(today);
+    // Safely handle progress field - provide defaults if missing
+    const progress = dailyTask.progress || {
+        completedDates: [],
+        currentStreak: dailyTask.streak || 0,
+        longestStreak: dailyTask.streak || 0
+    };
+    
+    const isCompletedToday = progress.completedDates.includes(today);
     
     // Check if task is active for today (based on selected days)
     const todayDay = window.getCurrentDayOfWeek ? window.getCurrentDayOfWeek() : new Date().toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase(); // Use debug time if available
-    const isActiveToday = dailyTask.schedule.recurrence.days.includes(todayDay);
+    
+    // Safely handle schedule field
+    const scheduleDays = (dailyTask.schedule && dailyTask.schedule.recurrence && dailyTask.schedule.recurrence.days) || 
+                         dailyTask.days || 
+                         [];
+    const isActiveToday = scheduleDays.includes(todayDay);
     
     // Get next active day info
-    const nextActiveDay = getNextActiveDay(dailyTask.schedule.recurrence.days);
+    const nextActiveDay = getNextActiveDay(scheduleDays);
+    
+    // Safely handle time field
+    const taskTime = (dailyTask.schedule && dailyTask.schedule.recurrence && dailyTask.schedule.recurrence.time) || 
+                     dailyTask.time || 
+                     '09:00';
     
     dailyTaskCard.innerHTML = `
         <div class="card-content">
@@ -1413,8 +1430,8 @@ function createDailyTaskCard(dailyTask) {
             <div class="card-description">${dailyTask.description || getText('dailyTasks.noDescription')}</div>
             <div class="card-info">
                 <div class="card-category">${dailyTask.category || getText('dailyTasks.noCategory')}</div>
-                <div class="card-time">${dailyTask.schedule.recurrence.time}</div>
-                <div class="card-days">${formatDays(dailyTask.schedule.recurrence.days)}</div>
+                <div class="card-time">${taskTime}</div>
+                <div class="card-days">${formatDays(scheduleDays)}</div>
             </div>
         </div>
         <div class="card-actions">
@@ -2113,7 +2130,9 @@ async function handleAddDailyTask(event) {
         title: formData.get('dailyTaskTitle') || document.getElementById('dailyTaskTitle').value,
         description: formData.get('dailyTaskDescription') || document.getElementById('dailyTaskDescription').value,
         category: formData.get('dailyTaskCategory') || document.getElementById('dailyTaskCategory').value,
-        isActive: true,
+        status: 'active',
+        streak: 0,
+        lastCompleted: null,
         schedule: {
             recurrence: {
                 type: 'weekly',
@@ -2132,7 +2151,8 @@ async function handleAddDailyTask(event) {
             currentStreak: 0,
             longestStreak: 0
         },
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
     };
 
     try {
@@ -2150,12 +2170,12 @@ async function handleAddDailyTask(event) {
         
         // Update UI
         updateDashboardCounts();
-        renderDailyTasks(); // Daily tasks sekmesini de güncelle
+        renderDailyTasks();
         
         // Close modal and show success
         closeModal('addDailyTaskModal');
         showStatus('Daily task added successfully!', 'success');
-        
+
     } catch (error) {
         console.error('Failed to add daily task:', error);
         showStatus('Failed to add daily task: ' + error.message, 'error');
@@ -2737,6 +2757,15 @@ async function completeDailyTask(dailyTaskId) {
         if (dailyTask) {
             const today = window.getTodayDate ? window.getTodayDate() : new Date().toISOString().split('T')[0]; // Use debug time if available
             
+            // Safely handle progress field - provide defaults if missing
+            if (!dailyTask.progress) {
+                dailyTask.progress = {
+                    completedDates: [],
+                    currentStreak: dailyTask.streak || 0,
+                    longestStreak: dailyTask.streak || 0
+                };
+            }
+            
             if (!dailyTask.progress.completedDates.includes(today)) {
                 dailyTask.progress.completedDates.push(today);
                 
@@ -2775,24 +2804,33 @@ async function uncompleteDailyTask(dailyTaskId) {
         const dailyTask = userData.dailyTasks.find(dt => dt.id === dailyTaskId);
         if (dailyTask) {
             const today = window.getTodayDate ? window.getTodayDate() : new Date().toISOString().split('T')[0]; // Use debug time if available
+            
+            // Safely handle progress field - provide defaults if missing
+            if (!dailyTask.progress) {
+                dailyTask.progress = {
+                    completedDates: [],
+                    currentStreak: dailyTask.streak || 0,
+                    longestStreak: dailyTask.streak || 0
+                };
+            }
         
-        if (dailyTask.progress.completedDates.includes(today)) {
-            dailyTask.progress.completedDates = dailyTask.progress.completedDates.filter(date => date !== today);
-            
-            // Recalculate current streak after removing today
-            dailyTask.progress.currentStreak = calculateCurrentStreak(dailyTask.progress.completedDates);
-            
-            // Update Firestore
-            await db.collection('user_data').doc(currentUser.uid).update({
-                dailyTasks: userData.dailyTasks
-            });
-            
-            // Add to activity log
-            addActivityLog('daily_task_uncompleted', dailyTaskId);
-            
-            // Update UI
-            updateDashboardCounts();
-            renderDailyTasks(); // Daily tasks sekmesini güncelle
+            if (dailyTask.progress.completedDates.includes(today)) {
+                dailyTask.progress.completedDates = dailyTask.progress.completedDates.filter(date => date !== today);
+                
+                // Recalculate current streak after removing today
+                dailyTask.progress.currentStreak = calculateCurrentStreak(dailyTask.progress.completedDates);
+                
+                // Update Firestore
+                await db.collection('user_data').doc(currentUser.uid).update({
+                    dailyTasks: userData.dailyTasks
+                });
+                
+                // Add to activity log
+                addActivityLog('daily_task_uncompleted', dailyTaskId);
+                
+                // Update UI
+                updateDashboardCounts();
+                renderDailyTasks(); // Daily tasks sekmesini güncelle
                 showStatus('Daily task uncompleted for today!', 'info');
             } else {
                 showStatus('Task not completed for today!', 'info');
@@ -2825,14 +2863,31 @@ async function editDailyTask(dailyTaskId) {
             document.getElementById('editDailyTaskTitle').value = dailyTask.title;
             document.getElementById('editDailyTaskDescription').value = dailyTask.description || '';
             document.getElementById('editDailyTaskCategory').value = dailyTask.category || '';
-            document.getElementById('editDailyTaskTime').value = dailyTask.schedule.recurrence.time || '08:00';
+            
+            // Safely handle time field
+            const taskTime = (dailyTask.schedule && dailyTask.schedule.recurrence && dailyTask.schedule.recurrence.time) || 
+                           dailyTask.time || 
+                           '08:00';
+            document.getElementById('editDailyTaskTime').value = taskTime;
             
             // Set selected days
             const daysSelect = document.getElementById('editDailyTaskDays');
-            if (daysSelect && dailyTask.schedule && dailyTask.schedule.recurrence && dailyTask.schedule.recurrence.days) {
+            if (daysSelect) {
+                // Clear all selections first
                 Array.from(daysSelect.options).forEach(option => {
-                    option.selected = dailyTask.schedule.recurrence.days.includes(option.value);
+                    option.selected = false;
                 });
+                
+                // Safely handle days field
+                const scheduleDays = (dailyTask.schedule && dailyTask.schedule.recurrence && dailyTask.schedule.recurrence.days) || 
+                                   dailyTask.days || 
+                                   [];
+                
+                if (scheduleDays.length > 0) {
+                    Array.from(daysSelect.options).forEach(option => {
+                        option.selected = scheduleDays.includes(option.value);
+                    });
+                }
             }
             
             // Show edit modal
@@ -2850,7 +2905,7 @@ async function editDailyTask(dailyTaskId) {
             
             // Setup form validation
             setupFormValidation('editDailyTaskForm', handleEditDailyTask);
-    } else {
+        } else {
             showStatus('Daily task not found', 'error');
         }
     } catch (error) {
@@ -2884,6 +2939,33 @@ async function handleEditDailyTask(event) {
         dailyTask.title = document.getElementById('editDailyTaskTitle').value;
         dailyTask.description = document.getElementById('editDailyTaskDescription').value;
         dailyTask.category = document.getElementById('editDailyTaskCategory').value;
+        
+        // Safely handle schedule field
+        if (!dailyTask.schedule) {
+            dailyTask.schedule = {
+                recurrence: {
+                    type: 'weekly',
+                    days: [],
+                    time: '08:00',
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                },
+                reminder: {
+                    enable: true,
+                    methods: ['push'],
+                    advanceMinutes: 15
+                }
+            };
+        }
+        
+        if (!dailyTask.schedule.recurrence) {
+            dailyTask.schedule.recurrence = {
+                type: 'weekly',
+                days: [],
+                time: '08:00',
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+        }
+        
         dailyTask.schedule.recurrence.time = document.getElementById('editDailyTaskTime').value;
         
         // Update selected days
@@ -2891,6 +2973,9 @@ async function handleEditDailyTask(event) {
         if (daysSelect) {
             dailyTask.schedule.recurrence.days = Array.from(daysSelect.selectedOptions).map(option => option.value);
         }
+        
+        // Update timestamps
+        dailyTask.updatedAt = new Date().toISOString();
         
         // Update Firestore
         await db.collection('user_data').doc(currentUser.uid).update({
@@ -3232,12 +3317,40 @@ async function handleEditDailyTask(event) {
         
         if (!dailyTask) {
             showStatus('Daily task not found', 'error');
-        return;
-    }
+            return;
+        }
     
         // Update daily task data
         dailyTask.title = document.getElementById('editDailyTaskTitle').value;
         dailyTask.description = document.getElementById('editDailyTaskDescription').value;
+        dailyTask.category = document.getElementById('editDailyTaskCategory').value;
+        
+        // Safely handle schedule field
+        if (!dailyTask.schedule) {
+            dailyTask.schedule = {
+                recurrence: {
+                    type: 'weekly',
+                    days: [],
+                    time: '08:00',
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                },
+                reminder: {
+                    enable: true,
+                    methods: ['push'],
+                    advanceMinutes: 15
+                }
+            };
+        }
+        
+        if (!dailyTask.schedule.recurrence) {
+            dailyTask.schedule.recurrence = {
+                type: 'weekly',
+                days: [],
+                time: '08:00',
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+        }
+        
         dailyTask.schedule.recurrence.time = document.getElementById('editDailyTaskTime').value;
         
         // Update selected days
@@ -3245,6 +3358,9 @@ async function handleEditDailyTask(event) {
         if (daysSelect) {
             dailyTask.schedule.recurrence.days = Array.from(daysSelect.selectedOptions).map(option => option.value);
         }
+        
+        // Update timestamps
+        dailyTask.updatedAt = new Date().toISOString();
         
         // Update Firestore
         await db.collection('user_data').doc(currentUser.uid).update({
@@ -3255,6 +3371,7 @@ async function handleEditDailyTask(event) {
         addActivityLog('daily_task_edited', dailyTaskId);
         
         // Update UI
+        updateDashboardCounts();
         renderDailyTasks();
         
         // Close modal
