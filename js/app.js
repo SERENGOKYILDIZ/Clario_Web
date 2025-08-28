@@ -657,12 +657,12 @@ async function loadUserData() {
                 await db.collection('users').doc(currentUser.uid).delete();
                 
                 console.log('User data migrated from old structure:', userData);
-                        } else {
+            } else {
                 // Create new user document with default structure
                 userData = createDefaultUserData();
                 await db.collection('user_data').doc(currentUser.uid).set(userData);
                 console.log('New user data created:', userData);
-                        }
+            }
         }
         
         console.log('User data loaded:', userData);
@@ -1327,6 +1327,19 @@ function createProjectCard(project) {
             <span class="card-count">${taskCount}</span>
         </div>
         <p>${project.description || getText('projects.noDescription')}</p>
+        
+        <!-- Progress Bar -->
+        <div class="project-progress">
+            <div class="progress-label">Progress: ${Math.round((project.progress || 0) * 100)}%</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: ${(project.progress || 0) * 100}%"></div>
+            </div>
+        </div>
+        <!-- Debug Info -->
+        <div style="font-size: 10px; color: #666; margin-top: 5px;">
+            Debug: progress=${project.progress}, calculated=${Math.round((project.progress || 0) * 100)}%
+        </div>
+        
         <div class="task-actions">
             <button class="action-btn btn-edit" onclick="event.stopPropagation(); editProject('${project.id}')">${getText('common.edit')}</button>
             <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteProject('${project.id}')">${getText('common.delete')}</button>
@@ -1846,6 +1859,9 @@ function filterTasks(filterType) {
 // Setup event listeners
 function setupEventListeners() {
     // Add any additional event listeners here
+    
+    // Setup progress bar event listeners
+    setupProgressBars();
 }
 
 // Show add task modal
@@ -1928,8 +1944,36 @@ function showAddProjectModal() {
         
         setupFormValidation('addProjectForm', handleAddProject);
         console.log('✅ Project Form validation setup completed');
+        
+        // Setup progress bar for add project modal
+        setupProgressBar('projectProgress', 'progressValue');
     } catch (error) {
         console.error('❌ Error in showAddProjectModal:', error);
+    }
+}
+
+// Setup progress bars
+function setupProgressBars() {
+    // Setup progress bar for add project modal
+    setupProgressBar('projectProgress', 'progressValue');
+    
+    // Setup progress bar for edit project modal
+    setupProgressBar('editProjectProgress', 'editProgressValue');
+}
+
+// Setup individual progress bar
+function setupProgressBar(sliderId, displayId) {
+    const slider = document.getElementById(sliderId);
+    const display = document.getElementById(displayId);
+    
+    if (slider && display) {
+        // Update display when slider changes
+        slider.addEventListener('input', function() {
+            display.textContent = this.value + '%';
+        });
+        
+        // Initialize display
+        display.textContent = slider.value + '%';
     }
 }
 
@@ -2002,10 +2046,15 @@ function populateProjectSelect(selectId = 'taskProject') {
 function setupFormValidation(formId, submitHandler) {
     const form = document.getElementById(formId);
     if (form) {
+        console.log(`🔧 Setting up form validation for ${formId}`);
         form.onsubmit = (e) => {
-    e.preventDefault();
+            e.preventDefault();
+            console.log(`🔧 Form ${formId} submitted, calling handler:`, submitHandler.name);
             submitHandler(e);
         };
+        console.log(`✅ Form validation setup completed for ${formId}`);
+    } else {
+        console.log(`❌ Form ${formId} not found for validation setup`);
     }
 }
 
@@ -2084,6 +2133,7 @@ async function handleAddProject(event) {
         title: formData.get('projectTitle') || document.getElementById('projectTitle').value,
         description: formData.get('projectDescription') || document.getElementById('projectDescription').value,
         color: document.getElementById('projectColor').value,
+        progress: parseFloat(formData.get('projectProgress') || 0) / 100, // Store as 0-1
         createdAt: new Date().toISOString(),
         members: [currentUser.uid],
         status: 'active'
@@ -2652,6 +2702,28 @@ async function editProject(projectId) {
             document.getElementById('editProjectDescription').value = project.description || '';
             document.getElementById('editProjectColor').value = project.color || '#3AA8FF';
             
+            // Populate progress field (convert from 0-1 to 0-100)
+            const progressInput = document.getElementById('editProjectProgress');
+            const progressDisplay = document.getElementById('editProgressValue');
+            if (progressInput && progressDisplay) {
+                const progressPercentage = Math.round((project.progress || 0) * 100);
+                progressInput.value = progressPercentage;
+                progressDisplay.textContent = progressPercentage + '%';
+                
+                console.log('🔧 Progress Population Debug:');
+                console.log('  - Original progress:', project.progress);
+                console.log('  - Calculated percentage:', progressPercentage);
+                console.log('  - Input value set to:', progressInput.value);
+                console.log('  - Display text set to:', progressDisplay.textContent);
+                
+                // Setup progress bar for edit modal
+                setupProgressBar('editProjectProgress', 'editProgressValue');
+            } else {
+                console.log('❌ Progress elements not found:');
+                console.log('  - progressInput:', progressInput);
+                console.log('  - progressDisplay:', progressDisplay);
+            }
+            
             // Show edit modal
             const modal = document.getElementById('editProjectModal');
             if (modal) {
@@ -2665,7 +2737,10 @@ async function editProject(projectId) {
                 console.log('❌ Edit Project Modal element not found');
             }
             
-            // Setup form validation
+            // Setup progress bar for edit modal
+            setupProgressBar('editProjectProgress', 'editProgressValue');
+            
+            // Setup form validation (this will handle the submit event)
             setupFormValidation('editProjectForm', handleEditProject);
         }
     } catch (error) {
@@ -2676,6 +2751,7 @@ async function editProject(projectId) {
 
 // Handle edit project form submission
 async function handleEditProject(event) {
+    console.log('🚀 handleEditProject called with event:', event);
     event.preventDefault();
     
     try {
@@ -2692,18 +2768,81 @@ async function handleEditProject(event) {
         project.description = document.getElementById('editProjectDescription').value;
         project.color = document.getElementById('editProjectColor').value;
         
+        // Update progress (convert from 0-100 to 0-1)
+        const progressInput = document.getElementById('editProjectProgress');
+        console.log('🔧 Progress Update Debug - Step 1:');
+        console.log('  - Progress input element:', progressInput);
+        console.log('  - Progress input found:', !!progressInput);
+        
+        if (progressInput) {
+            const progressValue = parseFloat(progressInput.value || 0);
+            const oldProgress = project.progress;
+            project.progress = progressValue / 100;
+            
+            console.log('🔧 Progress Update Debug - Step 2:');
+            console.log('  - Input value:', progressInput.value);
+            console.log('  - Parsed value:', progressValue);
+            console.log('  - Old progress:', oldProgress);
+            console.log('  - New progress:', project.progress);
+            console.log('  - Project object before update:', JSON.stringify(project, null, 2));
+            
+            // Verify the project object reference
+            console.log('🔧 Object Reference Debug:');
+            console.log('  - Project object reference:', project);
+            console.log('  - Project in userData.projects:', userData.projects.find(p => p.id === projectId));
+            console.log('  - Are they the same object?', project === userData.projects.find(p => p.id === projectId));
+        } else {
+            console.log('❌ editProjectProgress input not found!');
+            console.log('  - Available inputs:', Array.from(document.querySelectorAll('input')).map(i => ({id: i.id, name: i.name, type: i.type})));
+        }
+        
         // Update Firestore
-        await db.collection('user_data').doc(currentUser.uid).update({
+        console.log('🔧 Firestore Update Debug - Before Update:');
+        console.log('  - userData.projects:', JSON.stringify(userData.projects, null, 2));
+        console.log('  - Project to update:', JSON.stringify(project, null, 2));
+        
+        const updateResult = await db.collection('user_data').doc(currentUser.uid).update({
             projects: userData.projects
         });
+        
+        console.log('🔧 Firestore Update Debug - After Update:');
+        console.log('  - Update result:', updateResult);
+        
+        // Verify the update by reading back from Firestore
+        try {
+            const docRef = db.collection('user_data').doc(currentUser.uid);
+            const docSnap = await docRef.get();
+            if (docSnap && docSnap.exists) {
+                const updatedData = docSnap.data();
+                console.log('🔧 Firestore Verification:');
+                console.log('  - Updated projects in Firestore:', JSON.stringify(updatedData.projects, null, 2));
+                console.log('  - Our local projects:', JSON.stringify(userData.projects, null, 2));
+            } else {
+                console.log('🔧 Firestore Verification: Document not found or invalid snapshot');
+            }
+        } catch (verificationError) {
+            console.log('🔧 Firestore Verification: Error during verification:', verificationError);
+        }
         
         // Add to activity log
         addActivityLog('project_edited', projectId);
         
         // Update UI
+        console.log('🔧 UI Update Debug:');
+        console.log('  - Project progress after update:', project.progress);
+        console.log('  - All projects:', userData.projects.map(p => ({id: p.id, title: p.title, progress: p.progress})));
+        
+        // Verify the project object is still in userData.projects
+        const updatedProject = userData.projects.find(p => p.id === projectId);
+        console.log('🔧 Verification Debug:');
+        console.log('  - Updated project in userData.projects:', updatedProject);
+        console.log('  - Progress value in updated project:', updatedProject?.progress);
+        
         updateDashboardCounts();
         renderRecentTasks();
         renderProjects();
+        
+        console.log('  - UI updated, checking if progress bar reflects new value...');
         
         // Close modal
         closeModal('editProjectModal');
@@ -3265,45 +3404,7 @@ function editTask(taskId) {
 
 
 
-// Handle edit project form submission
-async function handleEditProject(event) {
-    event.preventDefault();
-    
-    try {
-        const projectId = document.getElementById('editProjectId').value;
-        const project = userData.projects.find(p => p.id === projectId);
-        
-        if (!project) {
-            showStatus('Project not found', 'error');
-            return;
-        }
-        
-        // Update project data
-        project.title = document.getElementById('editProjectTitle').value;
-        project.description = document.getElementById('editProjectDescription').value;
-        project.color = document.getElementById('editProjectColor').value;
-        // Note: editProjectCategory element doesn't exist in the modal, so we skip it
-        
-        // Update Firestore
-        await db.collection('user_data').doc(currentUser.uid).update({
-            projects: userData.projects
-        });
-        
-        // Add to activity log
-        addActivityLog('project_edited', projectId);
-        
-        // Update UI
-        renderProjects();
-        
-        // Close modal
-        closeModal('editProjectModal');
-        
-        showStatus('Project updated successfully!', 'success');
-    } catch (error) {
-        console.error('Failed to update project:', error);
-        showStatus('Failed to update project: ' + error.message, 'error');
-    }
-}
+
 
 
 

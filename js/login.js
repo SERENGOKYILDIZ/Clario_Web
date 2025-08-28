@@ -209,7 +209,7 @@ async function handleAuthStateChanged(user) {
             // If not found in new collection, check old users collection for migration
             if (!userDoc.exists) {
                 console.log('User not found in user_data collection, checking old users collection...');
-                const oldUserDoc = await db.collection('users').doc(user.uid).get();
+                const oldUserDoc = await db.collection('user_data').doc(user.uid).get();
                 
                 if (oldUserDoc.exists) {
                     console.log('Found user in old collection, migrating to new structure...');
@@ -251,7 +251,7 @@ async function handleAuthStateChanged(user) {
                     await db.collection('user_data').doc(user.uid).set(newUserData);
                     
                     // Delete old document
-                    await db.collection('users').doc(user.uid).delete();
+                    await db.collection('user_data').doc(user.uid).delete();
                     
                     console.log('User data migrated successfully');
                     userDoc = await db.collection('user_data').doc(user.uid).get();
